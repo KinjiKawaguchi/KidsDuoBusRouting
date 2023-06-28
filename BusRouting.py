@@ -2,20 +2,23 @@ import requests
 from Bus import Bus
 from Student import Student
 
-
 class BusRouting:
     def __init__(self):
         self.students = []
-        self.bus = []
+        self.buses = []
+        self.api_key = "YOUR_API_KEY"
 
     def executeBusRouting(self, students, numberOfBuses):
         self.students = students
         for i in range(numberOfBuses):
-            self.bus.append(Bus())
+            self.buses.append(Bus())
 
         # 1. 生徒を住所と下校時間でグループ化する
         groups = self.groupStudentsByAttribute(self.students)
         self.printGroups(groups)
+
+        # 2. 生徒をバスに乗せるルートを作成
+        self.createBusRoutes(groups)
 
     def printGroups(self, groups):
         print("========グループ化された生徒のリスト========")
@@ -41,11 +44,21 @@ class BusRouting:
 
         return sorted_groups
 
-    def getTravelTime(origin, destination, api_key):
+    def createBusRoutes(self, groups):
+        for group in groups:
+            for bus in self.buses:
+                if len(bus.students) + len(group) <= bus.capacity:
+                    bus.students.extend(group)
+                    bus.route.append(group[0].address)
+                    if len(bus.route) > 1:
+                        bus.travel_time += self.getTravelTime(bus.route[-2], bus.route[-1], self.api_key)
+                    break
+
+    def getTravelTime(self, origin, destination):
         base_url = "https://maps.googleapis.com/maps/api/directions/json?"
 
         # パラメータをURLに組み組み込む
-        complete_url = f"{base_url}origin={origin}&destination={destination}&key={api_key}"
+        complete_url = f"{base_url}origin={origin}&destination={destination}&key={self.api_key}"
 
         # APIを呼び出す
         response = requests.get(complete_url)
