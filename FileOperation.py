@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinterdnd2 import DND_FILES, TkinterDnD
 import os
 import csv
-import Student
+from Student import Student
 
 class FileOperation: 
     def __init__(self):  
