@@ -1,14 +1,31 @@
 import requests
-import Bus
-import Student
+from Bus import Bus
+from Student import Student
 
 class BusRouting:
     def __init__(self):
         self.students = []
         self.bus = []
         
-    def executeBusRouting(self, students):
+    def executeBusRouting(self, students, numberOfBuses):
         self.students = students
+        for i in range(numberOfBuses):
+            self.bus.append(Bus())
+            
+        # 1. 生徒を住所と下校時間でグループ化する
+        groups = self.group_students(self.students)
+        print(groups)
+        
+    def group_students(self,students):
+        # { (address, dismissal_time): [student1, student2, ...], ... }
+        groups = {}
+        for student in students:
+            key = (student.address, student.dismissal_time)
+            if key in groups:
+                groups[key].append(student)
+            else:
+                groups[key] = [student]
+        return list(groups.values())
         
     def get_travel_time(origin, destination, api_key):
         base_url = "https://maps.googleapis.com/maps/api/directions/json?"
