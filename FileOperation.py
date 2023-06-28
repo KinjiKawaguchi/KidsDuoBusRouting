@@ -1,7 +1,7 @@
 import tkinter as tk  
 from tkinterdnd2 import DND_FILES, TkinterDnD  
 
-class GetFile: 
+class FileOperation: 
     def __init__(self):  
         self.filepath = ''  
         self.root = TkinterDnD.Tk()  
