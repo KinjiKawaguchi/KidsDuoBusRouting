@@ -1,36 +1,38 @@
-import tkinter as tk  
+import tkinter as tk
 from tkinterdnd2 import DND_FILES, TkinterDnD
 import os
 import csv
 from Student import Student
 
-class FileOperation: 
-    def __init__(self):  
-        self.filepath = ''  
+
+class FileOperation:
+    def __init__(self):
+        self.filepath = ''
         self.root = TkinterDnD.Tk()
 
-    def drop(self,event): 
-        self.filepath = event.data 
+    def drop(self, event):
+        self.filepath = event.data
         self.root.quit()
 
     def setupGUI(self):  # GUIの構成を行う新たなメソッドを作成
-        self.frame = tk.Frame(self.root, name='drag-drop-area', width=400, height=400)  # Initialize the frame in the constructor
-        self.frame.pack()  
-        self.root.update() 
+        self.frame = tk.Frame(self.root, name='drag-drop-area', width=400,
+                              height=400)  # Initialize the frame in the constructor
+        self.frame.pack()
+        self.root.update()
         self.root.dnd_accept = lambda x: x
-        self.root.protocol("WM_DELETE_WINDOW", self.root.destroy) 
-        self.frame.drop_target_register(DND_FILES)  
+        self.root.protocol("WM_DELETE_WINDOW", self.root.destroy)
+        self.frame.drop_target_register(DND_FILES)
         self.frame.dnd_bind('<<Drop>>', self.drop)
 
-    def inputFile(self):  
-        self.root.withdraw() 
+    def inputFile(self):
+        self.root.withdraw()
         self.setupGUI()  # GUIの構成部分をここで呼び出す
-        self.root.deiconify()  
-        self.root.mainloop()  
+        self.root.deiconify()
+        self.root.mainloop()
 
         return self.filepath
-    
-    def readCSV(self,file_path):
+
+    def readCSV(self, file_path):
         if not os.path.exists(file_path):
             print("Error: ファイルが存在しません")
             return None
