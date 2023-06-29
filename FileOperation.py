@@ -1,7 +1,10 @@
-import tkinter as tk
-from tkinterdnd2 import DND_FILES, TkinterDnD
-import os
 import csv
+import os
+import tkinter as tk
+
+from tkinterdnd2 import DND_FILES, TkinterDnD
+
+from DatabaseManager import DatabaseManager
 from Student import Student
 
 
@@ -32,7 +35,7 @@ class FileOperation:
 
         return self.filepath
 
-    def readCSV(self, file_path):
+    def readCSV(self, file_path,encodingType):
         if not os.path.exists(file_path):
             print("Error: ファイルが存在しません")
             return None
@@ -44,25 +47,53 @@ class FileOperation:
         if not file_path.endswith(".csv"):
             print("Error: CSVファイルではありません")
             return None
-
-        students = []
         try:
-            with open(file_path, "r", encoding="utf-8") as file:
-                reader = csv.reader(file)
-                for row in reader:
-                    if len(row) < 3:
-                        print("Error: データが不完全です")
-                        return None
-
-                    name = row[0]
-                    address = row[1]
-                    dismissal_time = row[2]
-
-                    student = Student(name, address, dismissal_time)
-                    students.append(student)
-
+            with open(file_path, "r", encoding=encodingType) as file:
+                rows = csv.reader(file)
         except Exception as e:
             print(f"Error: ファイルの読み込み中にエラーが発生しました: {e}")
             return None
+        return rows
+
+    def setStudentData(self, filePath):
+        rows = self.readCSV(filePath, "utf-8")
+
+        students = []
+
+        for row in rows:
+            if len(row) != 3:
+                print("Error: データが不正です。")
+                return None
+
+            name = row[0]
+            address = row[1]
+            dismissal_time = row[2]
+
+            student = Student(name, address, dismissal_time)
+            students.append(student)
 
         return students
+
+    def registerPickUpPoint(self, filePath):
+        db = DatabaseManager('KidsDuoBusRouting.db')  # Use your actual database name
+        rows = self.readCSV(filePath, "utf-8")
+
+        for row in rows:
+            if len(row) != 2:
+                print("Error: データが不正です。")
+                return None
+
+        for row in rows:
+            name, address = row
+            if db.check_place_exists(name, address):
+                print(f"Error: '{name}' or '{address}' already exists in the database.")
+            else:
+                db.add_place(name, address)
+
+        return rows
+
+    def printRegisteredData(self, rows):
+        print("登録されたデータは以下の通りです。")
+        print("====================================")
+        for row in rows:
+            print(row[0], row[1])
