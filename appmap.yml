@@ -1,0 +1,16 @@
+appmap_dir: tmp/appmap
+language: python
+name: KidsDuoBus Routing
+packages:
+  - path: certifi
+  - path: tkinterdnd2
+  - path: requests
+  - path: tkdnd
+  - path: wheel
+  - path: pkg_resources
+  - path: urllib3
+  - path: idna
+  - path: charset_normalizer
+  - path: pip
+  - path: setuptools
+  - path: _distutils_hack
