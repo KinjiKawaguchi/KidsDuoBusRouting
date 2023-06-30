@@ -14,3 +14,19 @@ class ConsoleOperation:
                         else:
                             print("再度入力してください。")
                             break
+
+    def getStrInput(self, message):
+        while True:
+            strInput = input(message)
+            if strInput == "":
+                print("入力してください。")
+            else:
+                while True:
+                    print("入力されたのは" + strInput + "です。")
+                    confirm = input("この操作でよろしいですか？ (yes/no): ").lower()
+                    if confirm == "yes" or confirm == "no":
+                        if confirm == "yes":
+                            return strInput
+                        else:
+                            print("再度入力してください。")
+                            break

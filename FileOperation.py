@@ -76,7 +76,6 @@ class FileOperation:
 
     def registerPickUpPoint(self, filePath):
         db = DatabaseManager('KidsDuoBusRouting.db')  # Use your actual database name
-        rows = self.readCSV(filePath, "utf-8")
 
         # データベースが空の場合はユーザーに原点となる地点を入力してもらう
         if db.checkTableEmptyIs():
@@ -95,6 +94,8 @@ class FileOperation:
                     break
                 else:
                     print("再度入力してください。")
+
+        rows = self.readCSV(filePath, "utf-8")
 
         for row in rows:
             if len(row) != 2:

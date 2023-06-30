@@ -32,16 +32,18 @@ if __name__ == "__main__":
             fo.registerPickUpPoint(filePath)
 
         elif crud_action == 1:  # Read
-            fo.printPickupPoint()
+            fo.printAllPickupPoint()
 
         elif crud_action == 2:  # Update
-            id = co.getSelectedDataIndex()
-            new_name = co.inputNewName()
-            new_address = co.inputNewAddress()
-            fo.update_pickup_point(id, new_name, new_address)
+            fo.printAllPickupPoint()
+            id = co.getStrInput("更新したいデータのIDを入力してください: ")
+            new_name = co.getStrInput("新しい名前を入力してください: ")
+            new_address = co.getStrInput("新しい住所を入力してください: ")
+            fo.updatePickupPoint(id, new_name, new_address)
 
         elif crud_action == 3:  # Delete
-            id = co.getSelectedDataIndex()
-            fo.delete_pickup_point(id)
+            fo.printAllPickupPoint()
+            id = co.getStrInput("削除したいデータのIDを入力してください: ")
+            fo.deletePickupPoint(id)
     else:
         pass
