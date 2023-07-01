@@ -3,16 +3,15 @@ import Student
 MAX = 10
 
 class Bus:
-    NODEID = 0
-    def __init__(self, passengers=None):
-        id = NODEID
+    _id = 0
+    def __init__(self):
+        self.id = Bus._id
         name = ''
         self.max_passenger = MAX
-        if passengers is None:
-            self.passengers = []
-        else:
-            self.passengers = passengers
-        NODEID += 1
+        self.passengers = []
+        self.route = []
+        Bus._id += 1
+
     def pick(student):
         pass
     def drop(student):
@@ -20,4 +19,4 @@ class Bus:
     def is_empty(self):
         return not self.passengers
     def is_full(self):
-        return len(self.passengers) >= self.MAX_PASSENGERS
+        return len(self.passengers) >= self.max_passenger
