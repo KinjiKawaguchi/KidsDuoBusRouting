@@ -35,25 +35,23 @@ class FileOperation:
 
         return self.filepath
 
-    def readCSV(self, file_path,encodingType):
-        if not os.path.exists(file_path):
+    def readCSV(self, filePath, encodingType):
+        print(f"ファイルパス: {filePath}")
+        if not os.path.exists(filePath):
             print("Error: ファイルが存在しません")
             return None
 
-        if not os.path.isfile(file_path):
+        if not os.path.isfile(filePath):
             print("Error: ファイルパスが無効です")
             return None
 
-        if not file_path.endswith(".csv"):
+        if not filePath.endswith(".csv"):
             print("Error: CSVファイルではありません")
             return None
-        try:
-            with open(file_path, "r", encoding=encodingType) as file:
-                rows = csv.reader(file)
-        except Exception as e:
-            print(f"Error: ファイルの読み込み中にエラーが発生しました: {e}")
-            return None
-        return rows
+        with open(filePath, "r", encoding=encodingType) as file:
+            reader = csv.reader(file)
+            return list(reader)
+        return list(rows)
 
     def setStudentData(self, filePath):
         rows = self.readCSV(filePath, "utf-8")
