@@ -13,8 +13,8 @@ class DatabaseManager:
         ''')
         self.conn.commit()
 
-    def checkPlaceExistIs(self, name, address):
-        self.cursor.execute("SELECT * FROM Places WHERE name = ? OR address = ?", (name, address))
+    def checkPlaceExistIs(self, name):
+        self.cursor.execute("SELECT * FROM Places WHERE name = ?", name)
         return self.cursor.fetchone() is not None
 
     def checkTableEmptyIs(self):

@@ -1,6 +1,6 @@
+from BusRouting import BusRouting
 from ConsoleOperation import ConsoleOperation
 from FileOperation import FileOperation
-from BusRouting import BusRouting
 
 NUMBER_OF_BUSES = 3
 if __name__ == "__main__":
@@ -36,7 +36,11 @@ if __name__ == "__main__":
                 wayToInput = co.getInput(options)
                 if wayToInput == 0:
                     filePath = fo.inputFile()
-                    fo.registerPickUpPoint(filePath)
+                    registeredData = fo.registerPickUpPoint(filePath)
+                    if registeredData is not None:
+                        fo.printRegisteredData(registeredData)
+                    else:
+                        print("Error: データの登録に失敗しました。")
                 elif wayToInput == 1:
                     new_name = co.getStrInput("新しい名前を入力してください: ")
                     new_address = co.getStrInput("新しい住所を入力してください: ")
@@ -56,9 +60,9 @@ if __name__ == "__main__":
                 fo.printAllPickupPoint()
                 id = co.getStrInput("削除したいデータのIDを入力してください: ")
                 fo.deletePickupPoint(id)
-            elif crud_action == 4: # Exit
+            elif crud_action == 4:  # Exit
                 print("終了します。")
                 break
-        elif action == 2: # Exit
+        elif action == 2:  # Exit
             print("終了します。")
             break

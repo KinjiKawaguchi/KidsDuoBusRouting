@@ -100,14 +100,16 @@ class FileOperation:
                 print("Error: データが不正です。")
                 return None
 
+        registeredData = []
         for row in rows:
             name, address = row
-            if db.checkPlaceExistIs(name, address):
-                print(f"Error: '{name}' or '{address}' already exists in the database.")
+            if db.checkPlaceExistIs(name):
+                print(f"Error: '{name}' already exists in the database.")
             else:
                 db.addPlace(name, address)
+                registeredData.append(row)
 
-        return rows
+        return registeredData
 
     def printRegisteredData(self, rows):
         print("登録されたデータは以下の通りです。")
