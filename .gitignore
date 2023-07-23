@@ -1,0 +1,25 @@
+.idea/.gitignore
+.idea/appmap.xml
+.idea/dataSources.local.xml
+.idea/dataSources.xml
+.idea/discord.xml
+.idea/KidsDuoBus Routing.iml
+.idea/misc.xml
+.idea/modules.xml
+.idea/sqldialects.xml
+.idea/vcs.xml
+.idea/workspace.xml
+.idea/dataSources/9f91d03a-c385-4c39-914f-7cda29628131.xml
+.idea/inspectionProfiles/profiles_settings.xml
+__pycache__/Bus.cpython-310.pyc
+__pycache__/BusRouting.cpython-310.pyc
+__pycache__/calc_travel_time.cpython-310.pyc
+__pycache__/ConsoleOperation.cpython-310.pyc
+__pycache__/DatabaseManager.cpython-310.pyc
+__pycache__/FileOperation.cpython-310.pyc
+__pycache__/get_file.cpython-310.pyc
+__pycache__/PickupPoint.cpython-310.pyc
+__pycache__/Student.cpython-310.pyc
+datas/addressData.csv
+datas/DemoData.csv
+KidsDuoBusRouting.db

@@ -4,11 +4,15 @@ import tkinter as tk
 
 from tkinterdnd2 import DND_FILES, TkinterDnD
 
+from BusRouting import BusRouting
 from DatabaseManager import DatabaseManager
+from GoogleMapsClient import GoogleMapsClient
 from Student import Student
 
 
 class FileOperation:
+    APIKEY = ""
+
     def __init__(self):
         self.filepath = ''
         self.root = TkinterDnD.Tk()
@@ -48,10 +52,10 @@ class FileOperation:
         if not filePath.endswith(".csv"):
             print("Error: CSVファイルではありません")
             return None
+
         with open(filePath, "r", encoding=encodingType) as file:
             reader = csv.reader(file)
             return list(reader)
-        return list(rows)
 
     def setStudentData(self, filePath):
         rows = self.readCSV(filePath, "utf-8")
@@ -73,7 +77,8 @@ class FileOperation:
         return students
 
     def registerPickUpPoint(self, filePath):
-        db = DatabaseManager('KidsDuoBusRouting.db')  # Use your actual database name
+        # Use your actual database name
+        db = DatabaseManager('KidsDuoBusRouting.db')
 
         # データベースが空の場合はユーザーに原点となる地点を入力してもらう
         if db.checkTableEmptyIs():
@@ -88,7 +93,9 @@ class FileOperation:
                     if confirm == "yes" or confirm == "no":
                         break
                 if confirm == "yes":
-                    db.addPlace(name, address)
+                    addedPlace = db.addPlace(name, address)
+                    if addedPlace != None:
+                        pass
                     break
                 else:
                     print("再度入力してください。")
@@ -103,10 +110,14 @@ class FileOperation:
         registeredData = []
         for row in rows:
             name, address = row
-            if db.checkPlaceExistIs(name):
+            if db.checkPlaceExistsIs(name):
                 print(f"Error: '{name}' already exists in the database.")
             else:
-                db.addPlace(name, address)
+                addedPlaces = db.addPlace(name, address)
+                for addedPlace in addedPlaces:
+                    db.addRouteSegment()
+                if addedPlaces != None:
+                    pass
                 registeredData.append(row)
 
         return registeredData
@@ -125,8 +136,41 @@ class FileOperation:
 
     def updatePickupPoint(self, id, new_name, new_address):
         db = DatabaseManager('KidsDuoBusRouting.db')
-        db.updatePlace(id, new_name, new_address)
+        updatedData = db.updatePlace(id, new_name, new_address)
+        if updatedData != None:
+            pass
 
     def deletePickupPoint(self, id):
         db = DatabaseManager('KidsDuoBusRouting.db')
-        db.deletePlace(id)
+        deletedData = db.deletePlace(id)
+        if deletedData != None:
+            pass
+
+    def addRouteSegment(self, addedPlace):
+        google = GoogleMapsClient()
+        db = DatabaseManager('KidsDuoBusRouting.db')
+
+        addedId = addedPlace[0]
+        addedAddress = addedPlace[2]
+
+        db.getRouteSegment(0)
+        comparisonPlace = self.cursor.fetchone()
+
+        while comparisonPlace != addedPlace:
+            comparisonId = comparisonPlace[0]
+            comparisonAddress = comparisonPlace[2]
+
+            time, distance = google.getTravelTime(
+                addedAddress, comparisonAddress)
+            db.addRouteSegment(addedId, comparisonId, time, distance)
+
+            time, distance = google.getTravelTime(
+                comparisonAddress, addedAddress)
+            db.addRouteSegment(comparisonId, addedId, time, distance)
+
+            i = 1
+            while not (self.checkPlaceExistsIs(comparisonPlace[0] + 1)):
+                i += 1
+            db.getRouteSegment(comparisonPlace[0] + i)
+            comparisonPlace = self.cursor.fetchone()
+        self.conn.commit()
