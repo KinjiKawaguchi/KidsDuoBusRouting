@@ -77,6 +77,10 @@ class DatabaseManager:
     def getPickupPointNum(self):
         self.cursor.execute("SELECT COUNT(*) FROM Places")
         return self.cursor.fetchone()[0]
+    
+    def getPickupPoint(self, id):
+        self.cursor.execute("SELECT * FROM Places WHERE id = ?", (id,))
+        return self.cursor.fetchone()
 
 # ------------------------(RouteSegmentTable)-------------------------------------------
     def checkBusRouteSegmentExitsIs(self, nameFrom, nameTo, addressFrom, addressTo):

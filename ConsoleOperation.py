@@ -1,3 +1,7 @@
+from DatabaseManager import DatabaseManager
+from PickupPoint import PickupPoint
+
+
 class ConsoleOperation:
     def getInput(self,options):
         while True:
@@ -15,7 +19,7 @@ class ConsoleOperation:
                             print("再度入力してください。")
                             break
 
-    def getStrInput(self, message):
+    def getSingleStrInput(self, message):
         while True:
             strInput = input(message)
             if strInput == "":
@@ -27,6 +31,23 @@ class ConsoleOperation:
                     if confirm == "yes" or confirm == "no":
                         if confirm == "yes":
                             return strInput
+                        else:
+                            print("再度入力してください。")
+                            break
+
+    def getMultipleStrInput(self, message):
+        while True:
+            strInput = input(message + " (複数のIDを入力する場合はスペースで区切ってください): ")
+            if strInput == "":
+                print("入力してください。")
+            else:
+                strList = [str.strip() for str in strInput.split()]
+                while True:
+                    print("入力されたのは" + ", ".join(strList) + "です。")
+                    confirm = input("この操作でよろしいですか？ (yes/no): ").lower()
+                    if confirm == "yes" or confirm == "no":
+                        if confirm == "yes":
+                            return strList
                         else:
                             print("再度入力してください。")
                             break
