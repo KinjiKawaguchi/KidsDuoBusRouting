@@ -40,14 +40,17 @@ class DatabaseManager:
 
     def addPlace(self, name, address):
         try:
-            self.cursor.execute("INSERT INTO Places (name, address) VALUES (?, ?)", (name, address))
+            self.cursor.execute(
+                "INSERT INTO Places (name, address) VALUES (?, ?)", (name, address))
             self.conn.commit()
-            
+
             # Return the added data
-            self.cursor.execute("SELECT * FROM Places WHERE name = ? AND address = ?", (name, address))
+            self.cursor.execute(
+                "SELECT * FROM Places WHERE name = ? AND address = ?", (name, address))
             return self.cursor.fetchone()
         except sqlite3.IntegrityError:
-            print(f"Error: '{name}' or '{address}' already exists in the database.")
+            print(
+                f"Error: '{name}' or '{address}' already exists in the database.")
             return False
 
     def deletePlace(self, id):
@@ -60,7 +63,8 @@ class DatabaseManager:
         return data
 
     def updatePlace(self, id, new_name, new_address):
-        self.cursor.execute("UPDATE Places SET name = ?, address = ? WHERE id = ?", (new_name, new_address, id))
+        self.cursor.execute(
+            "UPDATE Places SET name = ?, address = ? WHERE id = ?", (new_name, new_address, id))
         self.conn.commit()
         # Return the updated data
         self.cursor.execute("SELECT * FROM Places WHERE id = ?", (id,))
@@ -74,41 +78,26 @@ class DatabaseManager:
         self.cursor.execute("SELECT COUNT(*) FROM Places")
         return self.cursor.fetchone()[0]
 
-#------------------------(RouteSegmentTable)-------------------------------------------
+# ------------------------(RouteSegmentTable)-------------------------------------------
     def checkBusRouteSegmentExitsIs(self, nameFrom, nameTo, addressFrom, addressTo):
         pass
 
-    def addRouteSegment(self):
-        
-        google = GoogleMapsClient()
-        
-        self.conn.execute('''SELECT * FROM Places WHERE id = (SELECT MAX(id) FROM Places)''')
-        addedData = self.cursor.fetchone()
-        addedAddress = addedData[2]
-        
-        self.conn.execute('''SELECT * FROM Places WHERE id = 0''')
-        comparisonData = self.cursor.fetchone()
-        
-        while comparisonData != addedData:
-            comparisonAddress = comparisonData[2]
-            time, distance = google.getTravelTime(comparisonAddress, addedAddress)
-            self.cursor.execute('''INSERT INTO BusRouteSegment (FromId, ToId, Time, Distance) VALUES(?, ?, ?, ?)''', (comparisonData[0], addedData[0], time, distance))
-
-            time, distance = google.getTravelTime(addedAddress, comparisonAddress)
-            self.cursor.execute('''INSERT INTO BusRouteSegment (FromId, ToId, Time, Distance) VALUES(?, ?, ?, ?)''', (comparisonData[0], addedData[0], time, distance))
-
-            i = 1
-            while not(self.checkPlaceExistsIs(comparisonData[0]+ i)):
-                i += 1
-            self.conn.execute('''SELECT * FROM Places WHERE id = ?''',(comparisonData[0] + i,))
-            comparisonData = self.cursor.fetchone()
-            
+    def addRouteSegment(self, addedId, comparisonId, time, distance):
+        self.cursor.execute("INSERT INTO BusRouteSegment (FromId, ToId, Time, Distance) VALUES (?, ?, ?, ?)",
+                            (addedId, comparisonId, time, distance))
         self.conn.commit()
+        return self.cursor.fetchone()
+    
+    def getRouteSegment(self, id):
+        pass
+    
+    def getRouteSegment(self, FromId, ToId):
+        pass
 
     def updateRouteSegment(self, id):
-        #WIP
+        # WIP
         pass
 
     def deleteRouteSegment(self, id):
-        #WIP
+        # WIP
         pass
