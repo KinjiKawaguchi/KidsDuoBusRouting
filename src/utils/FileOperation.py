@@ -53,9 +53,13 @@ class FileOperation:
             print("Error: CSVファイルではありません")
             return None
 
-        with open(filePath, "r", encoding=encodingType) as file:
-            reader = csv.reader(file)
-            return list(reader)
+        try:
+            with open(filePath, "r", encoding=encodingType) as file:
+                reader = csv.reader(file)
+                return list(reader)
+        except Exception as e:
+            print(f"Error: CSVファイルの読み込み中にエラーが発生しました: {e}")
+            return None
 
     def setStudentData(self, filePath):
         rows = self.readCSV(filePath, "utf-8")
