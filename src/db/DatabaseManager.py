@@ -1,8 +1,5 @@
 import sqlite3
 
-from BusRouting import BusRouting
-from GoogleMapsClient import GoogleMapsClient
-
 
 class DatabaseManager:
     def __init__(self, db_name):

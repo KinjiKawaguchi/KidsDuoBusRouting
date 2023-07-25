@@ -4,10 +4,9 @@ import tkinter as tk
 
 from tkinterdnd2 import DND_FILES, TkinterDnD
 
-from BusRouting import BusRouting
-from DatabaseManager import DatabaseManager
-from GoogleMapsClient import GoogleMapsClient
-from Student import Student
+from db.DatabaseManager import DatabaseManager
+from api.GoogleMapsClient import GoogleMapsClient
+from models.Student import Student
 
 
 class FileOperation:

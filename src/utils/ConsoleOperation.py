@@ -1,7 +1,3 @@
-from DatabaseManager import DatabaseManager
-from PickupPoint import PickupPoint
-
-
 class ConsoleOperation:
     def getInput(self,options):
         while True:

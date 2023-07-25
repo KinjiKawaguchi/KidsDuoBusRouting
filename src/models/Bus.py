@@ -1,4 +1,5 @@
-import Student
+from Student import Student
+
 
 MAX = 10
 

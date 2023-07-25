@@ -1,4 +1,4 @@
-from Bus import Bus
+from models.Bus import Bus
 
 
 class BusRouting:

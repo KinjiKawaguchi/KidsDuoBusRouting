@@ -1,7 +1,7 @@
-from BusRouting import BusRouting
-from ConsoleOperation import ConsoleOperation
-from DatabaseManager import DatabaseManager
-from FileOperation import FileOperation
+from services.BusRouting import BusRouting
+from utils.ConsoleOperation import ConsoleOperation
+from db.DatabaseManager import DatabaseManager
+from utils.FileOperation import FileOperation
 
 NUMBER_OF_BUSES = 3
 
