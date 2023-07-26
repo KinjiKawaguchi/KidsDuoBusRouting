@@ -49,16 +49,15 @@ class DatabaseManager:
             print(
                 f"Error: '{name}' or '{address}' already exists in the database.")
             return False
-        
+
     def get_pickup_point(self, id):
         self.cursor.execute("SELECT * FROM Places WHERE id = ?", (id,))
         return self.cursor.fetchone()
 
-
     def get_all_pickup_points(self):
         self.cursor.execute("SELECT * FROM Places")
         return self.cursor.fetchall()
-    
+
     def update_pickup_point(self, id, new_name, new_address):
         self.cursor.execute(
             "UPDATE Places SET name = ?, address = ? WHERE id = ?", (new_name, new_address, id))
@@ -80,6 +79,7 @@ class DatabaseManager:
         self.cursor.execute("SELECT COUNT(*) FROM Places")
         return self.cursor.fetchone()[0]
 # ------------------------(RouteSegmentTable)-------------------------------------------
+
     def is_route_segment_exits(self, origin_id, destination_id):
         pass
 
@@ -88,17 +88,29 @@ class DatabaseManager:
                             (added_id, comparing_id, duration, distance))
         self.conn.commit()
         return self.cursor.fetchone()
-    
-    def get_route_segment(self, id):
-        pass
-    
-    def get_route_segment(self, origin_id, destination_id):
-        pass
 
-    def update_route_segment(self, id):
-        # WIP
-        pass
+    def get_route_segment(self, origin_id, destination_id):
+        self.cursor.execute(
+            "SELECT * FROM BusRouteSegment WHERE FromId = ? AND ToId = ?", (origin_id, destination_id))
+        return self.cursor.fetchone()
+    
+    def get_all_route_segments(self):
+        self.cursor.execute("SELECT * FROM BusRouteSegment")
+        return self.cursor.fetchall()
+
+    def update_route_segment(self, origin_id, destination_id, new_origin_id, new_destination_id, new_duration, new_distance):
+        self.cursor.execute("UPDATE BusRouteSegment SET FromId = ?, ToId = ?, Time = ?, Distance = ? WHERE FromId = ? AND ToId = ?",
+                            (new_origin_id, new_destination_id, new_duration, new_distance, origin_id, destination_id))
+        updated_data = self.cursor.fetchone()
+        return updated_data
 
     def delete_route_segment(self, id):
-        # WIP
-        pass
+        self.cursor.execute("DELETE FROM BusRouteSegment WHERE id = ?", (id,))
+        deleted_data = self.cursor.fetchone()
+        return deleted_data
+    
+    def delete_route_segment(self, origin_id, destination_id):
+        self.cursor.execute("DELETE FROM BusRouteSegment WHERE FromId = ? AND ToId = ?", (origin_id, destination_id))
+        deleted_data = self.cursor.fetchone()
+        return deleted_data
+    
