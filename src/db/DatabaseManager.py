@@ -27,15 +27,15 @@ class DatabaseManager:
 
         self.conn.commit()
 
-    def checkPlaceExistsIs(self, id):
+    def is_pickup_point_exits(self, id):
         self.cursor.execute("SELECT * FROM Places WHERE id = id", (id,))
         return self.cursor.fetchone() is not None
 
-    def checkTableEmptyIs(self):
+    def is_table_empty(self):
         self.cursor.execute("SELECT COUNT(*) FROM Places")
         return self.cursor.fetchone()[0] == 0
 
-    def addPlace(self, name, address):
+    def add_pickup_point(self, name, address):
         try:
             self.cursor.execute(
                 "INSERT INTO Places (name, address) VALUES (?, ?)", (name, address))
@@ -49,8 +49,25 @@ class DatabaseManager:
             print(
                 f"Error: '{name}' or '{address}' already exists in the database.")
             return False
+        
+    def get_pickup_point(self, id):
+        self.cursor.execute("SELECT * FROM Places WHERE id = ?", (id,))
+        return self.cursor.fetchone()
 
-    def deletePlace(self, id):
+
+    def get_all_pickup_points(self):
+        self.cursor.execute("SELECT * FROM Places")
+        return self.cursor.fetchall()
+    
+    def update_pickup_point(self, id, new_name, new_address):
+        self.cursor.execute(
+            "UPDATE Places SET name = ?, address = ? WHERE id = ?", (new_name, new_address, id))
+        self.conn.commit()
+        # Return the updated data
+        self.cursor.execute("SELECT * FROM Places WHERE id = ?", (id,))
+        return self.cursor.fetchone()
+
+    def delete_pickup_point(self, id):
         # Fetch the data before deletion
         self.cursor.execute("SELECT * FROM Places WHERE id = ?", (id,))
         data = self.cursor.fetchone()
@@ -59,46 +76,29 @@ class DatabaseManager:
         # Return the deleted data
         return data
 
-    def updatePlace(self, id, new_name, new_address):
-        self.cursor.execute(
-            "UPDATE Places SET name = ?, address = ? WHERE id = ?", (new_name, new_address, id))
-        self.conn.commit()
-        # Return the updated data
-        self.cursor.execute("SELECT * FROM Places WHERE id = ?", (id,))
-        return self.cursor.fetchone()
-
-    def getAllplaces(self):
-        self.cursor.execute("SELECT * FROM Places")
-        return self.cursor.fetchall()
-
-    def getPickupPointNum(self):
+    def count_pickup_point(self):
         self.cursor.execute("SELECT COUNT(*) FROM Places")
         return self.cursor.fetchone()[0]
-    
-    def getPickupPoint(self, id):
-        self.cursor.execute("SELECT * FROM Places WHERE id = ?", (id,))
-        return self.cursor.fetchone()
-
 # ------------------------(RouteSegmentTable)-------------------------------------------
-    def checkBusRouteSegmentExitsIs(self, nameFrom, nameTo, addressFrom, addressTo):
+    def is_route_segment_exits(self, origin_id, destination_id):
         pass
 
-    def addRouteSegment(self, addedId, comparisonId, time, distance):
+    def add_route_segment(self, added_id, comparing_id, duration, distance):
         self.cursor.execute("INSERT INTO BusRouteSegment (FromId, ToId, Time, Distance) VALUES (?, ?, ?, ?)",
-                            (addedId, comparisonId, time, distance))
+                            (added_id, comparing_id, duration, distance))
         self.conn.commit()
         return self.cursor.fetchone()
     
-    def getRouteSegment(self, id):
+    def get_route_segment(self, id):
         pass
     
-    def getRouteSegment(self, FromId, ToId):
+    def get_route_segment(self, origin_id, destination_id):
         pass
 
-    def updateRouteSegment(self, id):
+    def update_route_segment(self, id):
         # WIP
         pass
 
-    def deleteRouteSegment(self, id):
+    def delete_route_segment(self, id):
         # WIP
         pass

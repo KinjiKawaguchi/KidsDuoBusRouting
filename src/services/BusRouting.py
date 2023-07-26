@@ -6,20 +6,20 @@ class BusRouting:
         self.students = []
         self.buses = []
 
-    def executeBusRouting(self, students, numberOfBuses):
+    def determining_bus_route(self, students, bus_count):
         self.students = students
-        for i in range(numberOfBuses):
+        for i in range(bus_count):
             self.buses.append(Bus())
 
         # 1. 生徒を住所と下校時間でグループ化する
-        groups = self.groupStudentsByAttribute(self.students)
-        self.printGroups(groups)
+        groups = self.grouping_students(self.students)
+        self.print_groups(groups)
 
         # 2. 生徒をバスに乗せるルートを作成
-        self.createBusRoutes(groups)
+        self.calculate_bus_route(groups)
 
     # 生徒を下校時間と小学校でグループ化
-    def groupStudentsByAttribute(self, students):
+    def grouping_student(self, students):
         # { (address, dismissal_time): [student1, student2, ...], ... }
         groups_dict = {}
         for student in students:
@@ -36,13 +36,13 @@ class BusRouting:
 
         return sorted_groups
 
-    def printGroups(self, groups):
+    def print_groups(self, groups):
         print("========グループ化された生徒のリスト========")
         for group in groups:
             print(f"{group[0].address} {group[0].dismissal_time}:")
             for student in group:
                 print(f"  {student.name}")
 
-    def createBusRoutes(self, groups):
+    def calculate_bus_route(self, groups):
         # バス配車アルゴリズムをコーディング
         pass

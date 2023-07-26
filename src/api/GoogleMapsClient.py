@@ -4,15 +4,15 @@ from urllib.parse import quote
 
 class GoogleMapsClient:
     def __init__(self):
-        self.APIKEY = "AIzaSyB7fQsLyeaEHtKrr1byIGkPkQ4I2lqGdQE"
+        self.API_KEY = ""
 
-    def getTravelTime(self, fromPlace, toPlace):
+    def calculate_duration(self, from_address, to_address):
         # URLエンコードを適用
-        origin = quote(fromPlace)
-        destination = quote(toPlace)
+        origin = quote(from_address)
+        destination = quote(to_address)
 
         # APIリクエストのURLを作成
-        url = f"https://maps.googleapis.com/maps/api/distancematrix/json?origins={origin}&destinations={destination}&key={self.APIKEY}"
+        url = f"https://maps.googleapis.com/maps/api/distancematrix/json?origins={origin}&destinations={destination}&key={self.API_KEY}"
 
         # APIリクエストを実行
         response = requests.get(url)

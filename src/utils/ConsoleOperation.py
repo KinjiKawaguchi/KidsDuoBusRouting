@@ -1,5 +1,5 @@
 class ConsoleOperation:
-    def getInput(self,options):
+    def receive_input(self,options):
         while True:
             for i in range(len(options)):
                 print(str(i) + "." + options[i])
@@ -7,43 +7,43 @@ class ConsoleOperation:
             if 0 <= index <= len(options) - 1:
                 while True:
                     print("選択されたのは" + options[index] + "です。")
-                    confirm = input("この操作でよろしいですか？ (yes/no): ").lower()
-                    if confirm == "yes" or confirm == "no":
-                        if confirm == "yes":
+                    is_confirm = input("この操作でよろしいですか？ (yes/no): ").lower()
+                    if is_confirm == "yes" or is_confirm == "no":
+                        if is_confirm == "yes":
                             return index
                         else:
                             print("再度入力してください。")
                             break
 
-    def getSingleStrInput(self, message):
+    def receive_single_str_input(self, message):
         while True:
-            strInput = input(message)
-            if strInput == "":
+            input = input(message)
+            if input == "":
                 print("入力してください。")
             else:
                 while True:
-                    print("入力されたのは" + strInput + "です。")
+                    print("入力されたのは" + input + "です。")
                     confirm = input("この操作でよろしいですか？ (yes/no): ").lower()
                     if confirm == "yes" or confirm == "no":
                         if confirm == "yes":
-                            return strInput
+                            return input
                         else:
                             print("再度入力してください。")
                             break
 
-    def getMultipleStrInput(self, message):
+    def receive_multiple_str_input(self, message):
         while True:
-            strInput = input(message + " (複数のIDを入力する場合はスペースで区切ってください): ")
-            if strInput == "":
+            input = input(message + " (複数のIDを入力する場合はスペースで区切ってください): ")
+            if input == "":
                 print("入力してください。")
             else:
-                strList = [str.strip() for str in strInput.split()]
+                input_list = [str.strip() for str in input.split()]
                 while True:
-                    print("入力されたのは" + ", ".join(strList) + "です。")
-                    confirm = input("この操作でよろしいですか？ (yes/no): ").lower()
-                    if confirm == "yes" or confirm == "no":
-                        if confirm == "yes":
-                            return strList
+                    print("入力されたのは" + ", ".join(input_list) + "です。")
+                    is_confirm = input("この操作でよろしいですか？ (yes/no): ").lower()
+                    if is_confirm == "yes" or is_confirm == "no":
+                        if is_confirm == "yes":
+                            return input_list
                         else:
                             print("再度入力してください。")
                             break
