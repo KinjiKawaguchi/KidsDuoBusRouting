@@ -14,7 +14,7 @@ class FileOperation:
 
     def __init__(self):
         self.file_path = ''
-        self.root = TkinterDnD.Tk()
+        self.db = DatabaseManager('KidsDuoBusRouting.db')
 
     def drop(self, event):
         self.file_path = event.data
@@ -31,6 +31,7 @@ class FileOperation:
         self.frame.dnd_bind('<<Drop>>', self.drop)
 
     def receive_file(self):
+        self.root = TkinterDnD.Tk()
         self.root.withdraw()
         self.setup_ui()  # GUIの構成部分をここで呼び出す
         self.root.deiconify()
@@ -39,17 +40,7 @@ class FileOperation:
         return self.file_path
 
     def read_csv(self, file_path, encoding_type):
-        print(f"ファイルパス: {file_path}")
-        if not os.path.exists(file_path):
-            print("Error: ファイルが存在しません")
-            return None
-
-        if not os.path.isfile(file_path):
-            print("Error: ファイルパスが無効です")
-            return None
-
-        if not file_path.endswith(".csv"):
-            print("Error: CSVファイルではありません")
+        if not (self.is_file_right(file_path)):
             return None
 
         try:
@@ -79,51 +70,64 @@ class FileOperation:
 
         return students
 
-    def register_pick_up_point(self, file_path):
+    def register_pickup_point(self, file_path):
         # Use your actual database name
-        db = DatabaseManager('KidsDuoBusRouting.db')
-
         # データベースが空の場合はユーザーに原点となる地点を入力してもらう
-        if db.is_table_empty():
+        if self.db.is_table_empty():
             while True:
                 name = input('原点となる地点の名前を入力してください: ')
                 address = input('原点となる地点の住所を入力してください: ')
 
                 # ユーザーに入力を確認してもらう
-                print(f"\n入力内容: \n名前: {name} \n住所: {address}")
+                print(
+                    f"\n入力内容: \n名前: {name} \n住所: {address} ")
                 while True:
                     is_confirm = input("この情報でよろしいですか？ (yes/no): ").lower()
                     if is_confirm == "yes" or is_confirm == "no":
                         break
                 if is_confirm == "yes":
-                    added_pickup_point = db.add_pickup_point(name, address)
-                    if added_pickup_point != None:
-                        pass
+                    self.db.add_pickup_point(name, address, True, True)
                     break
                 else:
                     print("再度入力してください。")
 
-        rows = self.read_csv(file_path, "utf-8")
+        if not (self.is_file_right(file_path)):
+            return None
+
+        rows = self.read_csv(file_path, "shift-jis")
 
         for row in rows:
-            if len(row) != 2:
+            if len(row) != 4:
                 print("Error: データが不正です。")
                 return None
 
         registered_datas = []
         for row in rows:
-            name, address = row
-            if db.is_pickup_point_exits(name):
+            name, address, is_origin, can_wait = row
+            if self.db.is_pickup_point_exits(name, address):
                 print(f"Error: '{name}' already exists in the database.")
             else:
-                added_pickup_point = db.add_pickup_point(name, address)
+                added_pickup_point = self.db.add_pickup_point(
+                    name, address, is_origin, can_wait)
                 for added_pickup_point in added_pickup_point:
-                    db.add_route_segment()
-                if added_pickup_point != None:
-                    pass
+                    self.db.add_route_segment()
                 registered_datas.append(row)
 
         return registered_datas
+
+    def is_file_right(self, file_path):
+        if not os.path.exists(file_path):
+            print("Error: ファイルが存在しません")
+            return False
+
+        if not os.path.isfile(file_path):
+            print("Error: ファイルパスが無効です")
+            return False
+
+        if not file_path.endswith(".csv"):
+            print("Error: CSVファイルではありません")
+            return False
+        return True
 
     def print_registeredData(self, rows):
         print("登録されたデータは以下の通りです。")
@@ -131,32 +135,57 @@ class FileOperation:
         for row in rows:
             print(row[0], row[1])
 
-    def print_all_pickup_point(self):
-        db = DatabaseManager('KidsDuoBusRouting.db')
-        places = db.get_all_pickup_points()
-        for place in places:
-            print(f"ID: {place[0]}, Name: {place[1]}, Address: {place[2]}")
+    def get_pickup_point(self, id):
+        pickup_point = self.db.get_pickup_point(id)
+        if pickup_point != None:
+            return pickup_point
+        return None
 
-    def update_pickup_point(self, id, new_name, new_address):
-        db = DatabaseManager('KidsDuoBusRouting.db')
-        updated_data = db.update_pickup_point(id, new_name, new_address)
+    def print_all_pickup_point(self):
+        pickup_points = self.db.get_all_pickup_points()
+        if pickup_points == []:
+            print("Error: データベースにデータが存在しません。")
+            return None
+        print("現在登録されているデータは以下の通りです。")
+        print("====================================")
+        for pickup_point in pickup_points:
+            print(
+                f"ID: {pickup_point[0]}, Name: {pickup_point[1]}, Address: {pickup_point[2]}, IsOrigin: {pickup_point[3]}, CanWait: {pickup_point[4]}")
+        return pickup_points
+
+    def update_pickup_point(self, id, new_name, new_address, new_can_wait):
+
+        updated_data = self.db.update_pickup_point(
+            id, new_name, new_address, new_can_wait)
         if updated_data != None:
             pass
 
     def delete_pickup_point(self, id):
-        db = DatabaseManager('KidsDuoBusRouting.db')
-        deleted_data = db.delete_pickup_point(id)
-        if deleted_data != None:
-            pass
+
+        deleted_datas = self.db.delete_pickup_point(id)
+        if deleted_datas == []:
+            print("Error: データの削除に失敗しました。")
+            return None
+        print("削除に成功したデータは以下の通りです。")
+        print("====================================")
+        for deleted_data in deleted_datas:
+            print("ID: ", deleted_data[0], "Name: ", deleted_data[1]),"Address: ", deleted_data[2], "IsOrigin: ", deleted_data[3], "CanWait: ", deleted_data[4]
+            deleted_data_id = deleted_data[0]
+            related_route_segments = self.db.get_related_route_segments(deleted_data_id)
+            for related_route_segment in related_route_segments:
+                deleted_route_segment = self.db.delete_route_segment(related_route_segment[0])
+                print("ID: ", deleted_route_segment[0], "Origin: ", deleted_route_segment[1], "Destination: ", deleted_route_segment[2], "Duration: ", deleted_route_segment[3], "Distance: ", deleted_route_segment[4])
+                
+        
+            
 
     def add_route_segment(self, added_pickup_point):
         google = GoogleMapsClient()
-        db = DatabaseManager('KidsDuoBusRouting.db')
 
         added_id = added_pickup_point[0]
         added_address = added_pickup_point[2]
 
-        db.get_route_segment(0)
+        self.db.get_route_segment(0)
         comparing_pickup_point = self.cursor.fetchone()
 
         while comparing_pickup_point != added_pickup_point:
@@ -165,15 +194,47 @@ class FileOperation:
 
             duration, distance = google.calculate_duration(
                 added_address, comparing_address)
-            db.add_route_segment(added_id, comparisonId, duration, distance)
+            self.db.add_route_segment(
+                added_id, comparisonId, duration, distance)
 
             duration, distance = google.calculate_duration(
                 comparing_address, added_address)
-            db.add_route_segment(comparisonId, added_id, duration, distance)
+            self.db.add_route_segment(
+                comparisonId, added_id, duration, distance)
 
             i = 1
             while not (self.is_pickup_point_exits(comparing_pickup_point[0] + 1)):
                 i += 1
-            db.get_route_segment(comparing_pickup_point[0] + i)
+            self.db.get_route_segment(comparing_pickup_point[0] + i)
             comparing_pickup_point = self.cursor.fetchone()
         self.conn.commit()
+
+    def print_all_route_segment(self):
+        route_segments = self.db.get_all_route_segments()
+        if route_segments == []:
+            print("Error: データベースにデータが存在しません。")
+            return None
+        print("登録されたデータは以下の通りです。")
+        print("====================================")
+        for route_segment in route_segments:
+            print(
+                f"ID: {route_segment[0]}, Origin: {route_segment[1]}, Destination: {route_segment[2]}, Duration: {route_segment[3]}, Distance: {route_segment[4]}")
+        return route_segments
+
+    def get_route_segment(self, id):
+        route_segment = self.db.get_route_segment(id)
+        if route_segment == []:
+            return None
+        return route_segment
+
+    def update_route_segment(self, id, new_duration, new_distance):
+        updated_data = self.db.update_route_segment(
+            id, new_duration, new_distance)
+        if updated_data != []:
+            print("更新に成功したデータは以下の通りです。")
+            print("====================================")
+            print(
+                f"ID: {updated_data[0]}, Origin: {updated_data[1]}, Destination: {updated_data[2]}, Duration: {updated_data[3]}, Distance: {updated_data[4]}")
+            return updated_data
+        print("更新に失敗しました。")
+        return None
