@@ -4,9 +4,9 @@ import tkinter as tk
 
 from tkinterdnd2 import DND_FILES, TkinterDnD
 
-from db.DatabaseManager import DatabaseManager
-from api.GoogleMapsClient import GoogleMapsClient
-from models.Student import Student
+from src.api.GoogleMapsClient import GoogleMapsClient
+from src.db.DatabaseManager import DatabaseManager
+from src.models.Student import Student
 
 
 class FileOperation:

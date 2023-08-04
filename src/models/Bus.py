@@ -1,6 +1,3 @@
-from Student import Student
-
-
 MAX = 10
 
 class Bus:

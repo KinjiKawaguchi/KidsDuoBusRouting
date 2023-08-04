@@ -1,7 +1,9 @@
-from services.BusRouting import BusRouting
-from utils.ConsoleOperation import ConsoleOperation
-from db.DatabaseManager import DatabaseManager
-from utils.FileOperation import FileOperation
+import sys
+
+from PyQt5.QtWidgets import QApplication
+from src.view.MainWindow import MainWindow
+
+from src.utils.ConsoleOperation import ConsoleOperation
 
 NUMBER_OF_BUSES = 3
 
