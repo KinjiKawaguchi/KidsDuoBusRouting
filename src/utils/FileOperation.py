@@ -112,7 +112,7 @@ def register_pickup_point(self, file_path):
     for row in rows:
         name, address, is_origin, can_wait = row
         if self.db.is_pickup_point_exits(name, address):
-            print(f"Error: '{name}' already exists in the database.")
+            print(f"Error: '{name}' & '{address}' はすでにレコードに存在しています。")
         else:
             added_pickup_point = self.db.add_pickup_point(
                 name, address, is_origin, can_wait)
