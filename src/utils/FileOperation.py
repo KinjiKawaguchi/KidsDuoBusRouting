@@ -174,24 +174,28 @@ class FileOperation:
 
     def delete_pickup_point(self, id):
 
-        deleted_datas = self.db.delete_pickup_point(id)
-        if deleted_datas == []:
+        deleted_data_list = self.db.delete_pickup_point(id)
+        if deleted_data_list is None:
             print("Error: データの削除に失敗しました。")
             return None
         print("削除に成功したデータは以下の通りです。")
         print("====================================")
-        for deleted_data in deleted_datas:
-            print("ID: ", deleted_data[0], "Name: ", deleted_data[1]),"Address: ", deleted_data[2], "IsOrigin: ", deleted_data[3], "CanWait: ", deleted_data[4]
+        for deleted_data in deleted_data_list:
+            pass
+            """
+            #print(
+            #    f"ID: {deleted_data[0]}, Name: {deleted_data[1]}, Address:  {deleted_data[2]}, IsOrigin: {str(deleted_data[3])}, CanWait: {str(deleted_data[4])}")
             deleted_data_id = deleted_data[0]
-            related_route_segments = self.db.get_related_route_segments(deleted_data_id)
+            related_route_segments = self.db.get_related_route_segments(
+                deleted_data_id)
             for related_route_segment in related_route_segments:
-                deleted_route_segment = self.db.delete_route_segment(related_route_segment[0])
-                print("ID: ", deleted_route_segment[0], "Origin: ", deleted_route_segment[1], "Destination: ", deleted_route_segment[2], "Duration: ", deleted_route_segment[3], "Distance: ", deleted_route_segment[4])
-                
-        
-            
+                deleted_route_segment = self.db.delete_route_segment(
+                    related_route_segment[0])
+                print("ID: ", deleted_route_segment[0], "Origin: ", deleted_route_segment[1], "Destination: ",
+                      deleted_route_segment[2], "Duration: ", deleted_route_segment[3], "Distance: ", deleted_route_segment[4])
+                      """
 
-    def add_route_segment(self, added_pickup_point):
+    def register_route_segment(self, added_pickup_point):
         google = GoogleMapsClient()
 
         added_id = added_pickup_point[0]
