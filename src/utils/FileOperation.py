@@ -45,7 +45,7 @@ class FileOperation:
             return None
 
         try:
-            with open(file_path, "r", encoding=encoding_type) as file:
+            with open(file_path, "r", encoding=encoding_type, errors='replace') as file:
                 reader = csv.reader(file)
                 return list(reader)
         except Exception as e:
@@ -98,10 +98,13 @@ class FileOperation:
         # Determine the file encoding
         with open(file_path, 'rb') as f:
             result = chardet.detect(f.read())
-        
+
         encoding = result['encoding']
-        
+
         rows = self.read_csv(file_path, encoding)
+        if rows is None:
+            print("Error: データの登録に失敗しました。")
+            return None
 
         for row in rows:
             if len(row) != 4:
