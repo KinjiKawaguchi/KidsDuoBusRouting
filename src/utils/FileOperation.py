@@ -71,56 +71,56 @@ class FileOperation:
 
         return students
 
-def register_pickup_point(self, file_path):
-    # Use your actual database name
-    # データベースが空の場合はユーザーに原点となる地点を入力してもらう
-    if self.db.is_table_empty():
-        while True:
-            name = input('原点となる地点の名前を入力してください: ')
-            address = input('原点となる地点の住所を入力してください: ')
-
-            # ユーザーに入力を確認してもらう
-            print(
-                f"\n入力内容: \n名前: {name} \n住所: {address} ")
+    def register_pickup_point(self, file_path):
+        # Use your actual database name
+        # データベースが空の場合はユーザーに原点となる地点を入力してもらう
+        if self.db.is_table_empty():
             while True:
-                is_confirm = input("この情報でよろしいですか？ (yes/no): ").lower()
-                if is_confirm == "yes" or is_confirm == "no":
+                name = input('原点となる地点の名前を入力してください: ')
+                address = input('原点となる地点の住所を入力してください: ')
+
+                # ユーザーに入力を確認してもらう
+                print(
+                    f"\n入力内容: \n名前: {name} \n住所: {address} ")
+                while True:
+                    is_confirm = input("この情報でよろしいですか？ (yes/no): ").lower()
+                    if is_confirm == "yes" or is_confirm == "no":
+                        break
+                if is_confirm == "yes":
+                    self.db.add_pickup_point(name, address, True, True)
                     break
-            if is_confirm == "yes":
-                self.db.add_pickup_point(name, address, True, True)
-                break
-            else:
-                print("再度入力してください。")
+                else:
+                    print("再度入力してください。")
 
-    if not (self.is_file_right(file_path)):
-        return None
-
-    # Determine the file encoding
-    with open(file_path, 'rb') as f:
-        result = chardet.detect(f.read())
-    
-    encoding = result['encoding']
-    
-    rows = self.read_csv(file_path, encoding)
-
-    for row in rows:
-        if len(row) != 4:
-            print("Error: データが不正です。")
+        if not (self.is_file_right(file_path)):
             return None
 
-    registered_datas = []
-    for row in rows:
-        name, address, is_origin, can_wait = row
-        if self.db.is_pickup_point_exits(name, address):
-            print(f"Error: '{name}' & '{address}' はすでにレコードに存在しています。")
-        else:
-            added_pickup_point = self.db.add_pickup_point(
-                name, address, is_origin, can_wait)
-            for added_pickup_point in added_pickup_point:
-                self.db.add_route_segment()
-            registered_datas.append(row)
+        # Determine the file encoding
+        with open(file_path, 'rb') as f:
+            result = chardet.detect(f.read())
+        
+        encoding = result['encoding']
+        
+        rows = self.read_csv(file_path, encoding)
 
-    return registered_datas
+        for row in rows:
+            if len(row) != 4:
+                print("Error: データが不正です。")
+                return None
+
+        registered_datas = []
+        for row in rows:
+            name, address, is_origin, can_wait = row
+            if self.db.is_pickup_point_exits(name, address):
+                print(f"Error: '{name}' , '{address}'はすでにレコードに存在しています。")
+            else:
+                added_pickup_point = self.db.add_pickup_point(
+                    name, address, is_origin, can_wait)
+                for added_pickup_point in added_pickup_point:
+                    self.db.add_route_segment()
+                registered_datas.append(row)
+
+        return registered_datas
 
     def is_file_right(self, file_path):
         if not os.path.exists(file_path):
