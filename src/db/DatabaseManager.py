@@ -1,5 +1,9 @@
 import sqlite3
 
+"""
+fetchone() : 1つのデータを取得する。戻り値はNoneかタプル。
+fetchall() : 全てのデータを取得する。戻り値は空のリスト([])かタプルのリスト。
+"""
 
 class DatabaseManager:
     def __init__(self, db_name):
@@ -30,13 +34,15 @@ class DatabaseManager:
 
         self.conn.commit()
 
-    def is_pickup_point_exits(self, id):
-        self.cursor.execute("SELECT * FROM pickup_point WHERE id = id", (id,))
-        return self.cursor.fetchone() is not None
+    def is_pickup_point_exists(self, id=None, name=None, address=None):
+        if id is not None:
+            self.cursor.execute("SELECT * FROM pickup_point WHERE id = ?", (id,))
+        elif name is not None and address is not None:
+            self.cursor.execute(
+                "SELECT * FROM pickup_point WHERE name = ? AND address = ?", (name, address))
+        else:
+            raise ValueError("Either id or both name and address must be provided.")
 
-    def is_pickup_point_exits(self, name, address):
-        self.cursor.execute(
-            "SELECT * FROM pickup_point WHERE name = ? AND address = ?", (name, address))
         return self.cursor.fetchone() is not None
 
     def is_table_empty(self):
@@ -44,12 +50,15 @@ class DatabaseManager:
         return self.cursor.fetchone()[0] == 0
 
     def add_pickup_point(self, name, address, can_wait, is_origin=False):
+        can_wait = 1 if can_wait == "TRUE" else 0
+        is_origin = 1 if is_origin == "TRUE" else 0
+
         try:
             self.cursor.execute(
                 "INSERT INTO pickup_point (name, address, is_origin, can_wait) VALUES (?, ?, ?, ?)", (name, address, is_origin, can_wait))
             self.conn.commit()
 
-            # Return the added data
+            # nameとaddressは一意なので、改めて検索して最後に追加されたデータを取得する。
             self.cursor.execute(
                 "SELECT * FROM pickup_point WHERE name = ? AND address = ?", (name, address))
             return self.cursor.fetchone()
@@ -101,15 +110,17 @@ class DatabaseManager:
         self.conn.commit()
         return self.cursor.fetchone()
 
-    def get_route_segment(self, origin_id, destination_id):
-        self.cursor.execute(
-            "SELECT * FROM route_segments WHERE origin_id = ? AND destination_id = ?", (origin_id, destination_id))
-        return self.cursor.fetchone()
-    
-    def get_route_segment(self,pickup_point_id):
-        self.cursor.execute(
-            "SELECT * FROM route_segments WHERE origin_id = ? OR destination_id = ?", (pickup_point_id, pickup_point_id))
-        return self.cursor.fetchall()
+    def get_route_segment(self, pickup_point_id, destination_id=None):
+        if destination_id is None:
+            self.cursor.execute(
+                "SELECT * FROM route_segments WHERE origin_id = ? OR destination_id = ?",
+                (pickup_point_id, pickup_point_id))
+            return self.cursor.fetchall()
+        else:
+            self.cursor.execute(
+                "SELECT * FROM route_segments WHERE origin_id = ? AND destination_id = ?",
+                (pickup_point_id, destination_id))
+            return self.cursor.fetchone()
 
     def get_all_route_segments(self):
         self.cursor.execute("SELECT * FROM route_segments")
