@@ -55,7 +55,8 @@ class DatabaseManager:
 
         try:
             self.cursor.execute(
-                "INSERT INTO pickup_point (name, address, is_origin, can_wait) VALUES (?, ?, ?, ?)", (name, address, is_origin, can_wait))
+                "INSERT INTO pickup_point (name, address, is_origin, can_wait) VALUES (?, ?, ?, ?)",
+                (name, address, is_origin, can_wait))
             self.conn.commit()
 
             # nameとaddressは一意なので、改めて検索して最後に追加されたデータを取得する。
