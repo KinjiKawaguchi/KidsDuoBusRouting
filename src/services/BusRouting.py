@@ -1,10 +1,23 @@
 from src.models.Bus import Bus
+from src.utils.FileOperation import FileOperation
 
 
 class BusRouting:
     def __init__(self):
+        self.load_data()
         self.students = []
         self.buses = []
+        
+    def load_data(self):
+        self.pickup_points = []
+        self.route_segments = []
+        self.buses = []
+        self.students = []
+
+        fo = FileOperation()
+        self.pickup_points = fo.load_pickup_points()
+        self.route_segments = fo.load_route_segments()
+        self.buses = fo.load_buses()
 
     def determining_bus_route(self, students, bus_count):
         self.students = students

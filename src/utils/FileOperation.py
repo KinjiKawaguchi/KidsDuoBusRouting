@@ -16,9 +16,22 @@ class FileOperation:
     _PICKUP_POINT_DATA_ROW_COLUMN = 4
     _ROUTE_SEGMENT_DATA_ROW_COLUMN = 5
 
+    _PP_ID_COLUMN = 0
+    _PP_NAME_COLUMN = 1
+    _PP_ADDRESS_COLUMN = 2 
+    _PP_IS_ORIGIN_COLUMN = 3 
+    _PP_CAN_WAIT_COLUMN = 4
+
+    _RS_ID_COLUMN = 0
+    _RS_ORIGIN_ID_COLUMN = 1
+    _RS_DESTINATION_ID_COLUMN = 2
+    _RS_DURATION_COLUMN = 3
+    _RS_DISTANCE_COLUMN = 4
+
     def __init__(self):
         self.file_path = ''
         self.db = DatabaseManager('KidsDuoBusRouting.db')
+        self.google = GoogleMapsClient()
 
     def drop(self, event):
         self.file_path = event.data
@@ -146,6 +159,7 @@ class FileOperation:
         print("====================================")
         for row in rows:
             print(row[0], row[1])
+            # TODO: ここの処理をピックアップポイント以外のデータも表示できる汎用性を持たせる
 
     def get_pickup_point(self, id):
         pickup_point = self.db.get_pickup_point(id)
@@ -162,7 +176,7 @@ class FileOperation:
         print("====================================")
         for pickup_point in pickup_points:
             print(
-                f"ID: {pickup_point[0]}, Name: {pickup_point[1]}, Address: {pickup_point[2]}, IsOrigin: {pickup_point[3]}, CanWait: {pickup_point[4]}")
+                f"ID: {pickup_point[self._PP_ID_COLUMN]}, Name: {pickup_point[self._PP_NAME_COLUMN]}, Address: {pickup_point[self._PP_ADDRESS_COLUMN]}, IsOrigin: {pickup_point[self._PP_IS_ORIGIN_COLUMN]}, CanWait: {pickup_point[self._PP_CAN_WAIT_COLUMN]}")
         return pickup_points
 
     def update_pickup_point(self, id, new_name, new_address, new_can_wait):
@@ -173,26 +187,32 @@ class FileOperation:
             pass
 
     def delete_pickup_point(self, id):
-
-        deleted_datas = self.db.delete_pickup_point(id)
-        if deleted_datas == []:
+        deleted_pickup_point_list = self.db.delete_pickup_point(id)
+        if deleted_pickup_point_list is None:
             print("Error: データの削除に失敗しました。")
             return None
-        print("削除に成功したデータは以下の通りです。")
-        print("====================================")
-        for deleted_data in deleted_datas:
-            print("ID: ", deleted_data[0], "Name: ", deleted_data[1]),"Address: ", deleted_data[2], "IsOrigin: ", deleted_data[3], "CanWait: ", deleted_data[4]
-            deleted_data_id = deleted_data[0]
-            related_route_segments = self.db.get_related_route_segments(deleted_data_id)
-            for related_route_segment in related_route_segments:
-                deleted_route_segment = self.db.delete_route_segment(related_route_segment[0])
-                print("ID: ", deleted_route_segment[0], "Origin: ", deleted_route_segment[1], "Destination: ", deleted_route_segment[2], "Duration: ", deleted_route_segment[3], "Distance: ", deleted_route_segment[4])
-                
-        
-            
+        deleted_route_segment_list = None
+        for deleted_pickup_point in deleted_pickup_point_list:
+            deleted_route_segment_list.append(self.delete_route_segment(deleted_pickup_point[0]))
 
-    def add_route_segment(self, added_pickup_point):
-        google = GoogleMapsClient()
+        print("削除に成功したピックアップポイントのデータは以下の通りです。")
+        print("====================================")
+        for deleted_pickup_point in deleted_pickup_point_list:
+            can_wait = True if deleted_pickup_point[self._PP_CAN_WAIT_COLUMN] == 1 else False
+            is_origin = True if deleted_pickup_point[self._PP_IS_ORIGIN_COLUMN] == 1 else False
+            print(f"ID: {deleted_pickup_point[self._PP_ID_COLUMN]} NAME: {deleted_pickup_point[self._PP_NAME_COLUMN]} Address: {deleted_pickup_point[self._PP_ADDRESS_COLUMN]} IsOrigin: {is_origin} CanWait: {can_wait}")
+        print("削除に成功したルートセグメントのデータは以下の通りです。")
+        print("====================================")
+        for deleted_route_segment in deleted_route_segment_list:
+            origin_pickup_point = self.db.get_pickup_point(deleted_route_segment[self._RS_ORIGIN_ID_COLUMN])
+            origin_name = origin_pickup_point[self._PP_NAME_COLUMN]
+            origin_address = origin_pickup_point[self._PP_ADDRESS_COLUMN]
+            destination_pickup_point = self.db.get_pickup_point[deleted_route_segment[self._RS_DESTINATION_ID_COLUMN]]
+            destination_name = destination_pickup_point[self._PP_NAME_COLUMN]
+            destination_address = destination_pickup_point[self._PP_ADDRESS_COLUMN]
+            print(f"ID: {deleted_route_segment[self._RS_ID_COLUMN]} OriginName: {origin_name} OriginAddress: {origin_address} DestionationName: {destination_name} DestionationAddress: {destination_address} Duration: {deleted_route_segment[self._RS_DURATION_COLUMN]} Distance: {deleted_route_segment[self._RS_DISTANCE_COLUMN]}")
+
+    def register_route_segment(self, added_pickup_point):
 
         added_id = added_pickup_point[0]
         added_address = added_pickup_point[2]
@@ -203,18 +223,18 @@ class FileOperation:
             comparisonId = comparing_pickup_point[0]
             comparing_address = comparing_pickup_point[2]
 
-            duration, distance = google.calculate_duration(
+            duration, distance = self.google.calculate_duration(
                 added_address, comparing_address)
             self.db.add_route_segment(
                 added_id, comparisonId, duration, distance)
 
-            duration, distance = google.calculate_duration(
+            duration, distance = self.google.calculate_duration(
                 comparing_address, added_address)
             self.db.add_route_segment(
                 comparisonId, added_id, duration, distance)
 
             i = 1
-            while not (self.db.is_pickup_point_exists(id=comparing_pickup_point[0] + i)):
+            while not (self.db.is_pickup_point_exists(id = comparing_pickup_point[0] + i)):
                 i += 1
             comparing_pickup_point = self.db.get_pickup_point(comparing_pickup_point[0] + i)
 
@@ -235,15 +255,42 @@ class FileOperation:
         if route_segment == []:
             return None
         return route_segment
+    
+        #削除はピックアップポイントが削除された時のみ実行される
+    def delete_route_segment(self, deleted_pickup_point_id):
+        delete_route_segment_list = self.db.get_route_segment(pickup_point_id = deleted_pickup_point_id)
+        deleted_route_segment_list = None
+        for delete_route_segment in delete_route_segment_list:
+            deleted_route_segment = self.db.delete_route_segment(delete_route_segment[0])
+            if deleted_route_segment is not None:
+                deleted_route_segment_list.append(delete_route_segment)
+        return deleted_route_segment_list
 
-    def update_route_segment(self, id, new_duration, new_distance):
-        updated_data = self.db.update_route_segment(
-            id, new_duration, new_distance)
-        if updated_data != []:
-            print("更新に成功したデータは以下の通りです。")
-            print("====================================")
-            print(
-                f"ID: {updated_data[0]}, Origin: {updated_data[1]}, Destination: {updated_data[2]}, Duration: {updated_data[3]}, Distance: {updated_data[4]}")
-            return updated_data
-        print("更新に失敗しました。")
-        return None
+    #更新はピックアップポイントのデータ更新のタイミング、またはユーザがルートセグメントの情報を編集する場合に行われる
+    def update_route_segment(self, updated_pickup_point_id = None, route_segment_id = None, new_duration = None, new_distance = None):
+        if route_segment_id and new_duration and new_distance is not None:
+            current_route_segment = self.db.get_route_segment(route_segment_id = route_segment_id)
+            updated_route_segment = self.db.update_route_segment(
+                route_segment_id, new_duration, new_distance)
+            if updated_route_segment != []:
+                print("更新に成功したデータは以下の通りです。")
+                print("====================================")
+                
+                print(
+                    f"ID: {updated_route_segment[0]}, Origin: {updated_route_segment[1]}, Destination: {updated_route_segment[2]}, Duration: {updated_route_segment[3]}, Distance: {updated_route_segment[4]}")
+                return updated_route_segment
+            print("更新に失敗しました。")
+            return None
+        elif updated_pickup_point_id is not None:
+            update_route_segment_list = self.get_route_segmnet(pickup_point_id = updated_pickup_point_id)
+            for update_route_segment in update_route_segment_list:
+                origin_id = update_route_segment[self._RS_ORIGIN_ID_COLUMN]
+                destination_id  = update_route_segment[self._RS_DESTINATION_ID_COLUMN]
+                origin_address = self.get_pickup_point(origin_id)[self._PP_ADDRESS_COLUMN]
+                destination_address = self.get_pickup_point(destination_id)[self._PP_ADDRESS_COLUMN]
+                calculated_duration , calculated_distance = self.google.calculate_duration(origin_address, destination_address)   
+                self.update_route_segment(route_segment_id = update_route_segment[self._RS_ID_COLUMN], new_duration = calculated_duration, new_distance = calculated_distance)
+        else:
+            print("Error: update_route_segmentの呼び出しエラー")
+            return None
+    
