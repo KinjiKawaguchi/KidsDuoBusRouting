@@ -6,6 +6,23 @@ fetchall() : 全てのデータを取得する。戻り値は空のリスト([])
 """
 
 class DatabaseManager:
+    ORIGIN_ID = 1
+    STUDENT_DATA_COLUMN_NUM = 3
+    PICKUP_POINT_DATA_COLUMN_NUM = 4
+    ROUTE_SEGMENT_DATA_COLUMN__NUM = 5
+
+    PP_ID_COLUMN = 0
+    PP_NAME_COLUMN = 1
+    PP_ADDRESS_COLUMN = 2 
+    PP_IS_ORIGIN_COLUMN = 3 
+    PP_CAN_WAIT_COLUMN = 4
+
+    RS_ID_COLUMN = 0
+    RS_ORIGIN_ID_COLUMN = 1
+    RS_DESTINATION_ID_COLUMN = 2
+    RS_DURATION_COLUMN = 3
+    RS_DISTANCE_COLUMN = 4
+    
     def __init__(self, db_name):
         self.conn = sqlite3.connect(db_name)
         self.cursor = self.conn.cursor()

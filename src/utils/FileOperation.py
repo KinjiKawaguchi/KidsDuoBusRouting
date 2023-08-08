@@ -11,23 +11,6 @@ from src.models.Student import Student
 
 
 class FileOperation:
-    _ORIGIN_ID = 1
-    _STUDENT_DATA_ROW_COLUMN = 3
-    _PICKUP_POINT_DATA_ROW_COLUMN = 4
-    _ROUTE_SEGMENT_DATA_ROW_COLUMN = 5
-
-    _PP_ID_COLUMN = 0
-    _PP_NAME_COLUMN = 1
-    _PP_ADDRESS_COLUMN = 2 
-    _PP_IS_ORIGIN_COLUMN = 3 
-    _PP_CAN_WAIT_COLUMN = 4
-
-    _RS_ID_COLUMN = 0
-    _RS_ORIGIN_ID_COLUMN = 1
-    _RS_DESTINATION_ID_COLUMN = 2
-    _RS_DURATION_COLUMN = 3
-    _RS_DISTANCE_COLUMN = 4
-
     def __init__(self):
         self.file_path = ''
         self.db = DatabaseManager('KidsDuoBusRouting.db')
@@ -74,7 +57,7 @@ class FileOperation:
         students = []
 
         for row in rows:
-            if len(row) != self._STUDENT_DATA_ROW_COLUMN:
+            if len(row) != self.db.STUDENT_DATA_ROW_COLUMN:
                 print("Error: データが不正です。")
                 return None
 
@@ -123,7 +106,7 @@ class FileOperation:
             return None
 
         for row in rows:
-            if len(row) != self._PICKUP_POINT_DATA_ROW_COLUMN:
+            if len(row) != self.db.PICKUP_POINT_DATA_ROW_COLUMN:
                 print("Error: データが不正です。")
                 return None
 
@@ -176,7 +159,7 @@ class FileOperation:
         print("====================================")
         for pickup_point in pickup_points:
             print(
-                f"ID: {pickup_point[self._PP_ID_COLUMN]}, Name: {pickup_point[self._PP_NAME_COLUMN]}, Address: {pickup_point[self._PP_ADDRESS_COLUMN]}, IsOrigin: {pickup_point[self._PP_IS_ORIGIN_COLUMN]}, CanWait: {pickup_point[self._PP_CAN_WAIT_COLUMN]}")
+                f"ID: {pickup_point[self.db.PP_ID_COLUMN]}, Name: {pickup_point[self.db.PP_NAME_COLUMN]}, Address: {pickup_point[self.db.PP_ADDRESS_COLUMN]}, IsOrigin: {pickup_point[self.db.PP_IS_ORIGIN_COLUMN]}, CanWait: {pickup_point[self.db.PP_CAN_WAIT_COLUMN]}")
         return pickup_points
 
     def update_pickup_point(self, id, new_name, new_address, new_can_wait):
@@ -195,8 +178,8 @@ class FileOperation:
 
         print("削除に成功したピックアップポイントのデータは以下の通りです。")
         print("====================================")
-        can_wait = True if deleted_pickup_point[self._PP_CAN_WAIT_COLUMN] == 1 else False
-        is_origin = True if deleted_pickup_point[self._PP_IS_ORIGIN_COLUMN] == 1 else False
+        can_wait = True if deleted_pickup_point[self.db._PP_CAN_WAIT_COLUMN] == 1 else False
+        is_origin = True if deleted_pickup_point[self.db._PP_IS_ORIGIN_COLUMN] == 1 else False
         print(f"ID: {deleted_pickup_point[self._PP_ID_COLUMN]} NAME: {deleted_pickup_point[self._PP_NAME_COLUMN]} Address: {deleted_pickup_point[self._PP_ADDRESS_COLUMN]} IsOrigin: {is_origin} CanWait: {can_wait}")
         print("削除に成功したルートセグメントのデータは以下の通りです。")
         print("====================================")
@@ -207,7 +190,8 @@ class FileOperation:
         added_id = added_pickup_point[0]
         added_address = added_pickup_point[2]
 
-        comparing_pickup_point = self.db.get_pickup_point(self._ORIGIN_ID)
+        comparing_pickup_point = self.db.get_pickup_point(
+            self.db.ORIGIN_ID)
 
         while comparing_pickup_point != added_pickup_point:
             comparisonId = comparing_pickup_point[0]
@@ -226,7 +210,8 @@ class FileOperation:
             i = 1
             while not (self.db.is_pickup_point_exists(id = comparing_pickup_point[0] + i)):
                 i += 1
-            comparing_pickup_point = self.db.get_pickup_point(comparing_pickup_point[0] + i)
+            comparing_pickup_point = self.db.get_pickup_point(
+                comparing_pickup_point[0] + i)
 
     def print_all_route_segment(self):
         route_segments = self.db.get_all_route_segments()
@@ -265,22 +250,25 @@ class FileOperation:
             if updated_route_segment != []:
                 print("更新に成功したデータは以下の通りです。")
                 print("====================================")
-                
                 print(
                     f"ID: {updated_route_segment[0]}, Origin: {updated_route_segment[1]}, Destination: {updated_route_segment[2]}, Duration: {updated_route_segment[3]}, Distance: {updated_route_segment[4]}")
                 return updated_route_segment
             print("更新に失敗しました。")
             return None
         elif updated_pickup_point_id is not None:
-            update_route_segment_list = self.get_route_segmnet(pickup_point_id = updated_pickup_point_id)
+            update_route_segment_list = self.get_route_segmnet(
+                pickup_point_id=updated_pickup_point_id)
             for update_route_segment in update_route_segment_list:
-                origin_id = update_route_segment[self._RS_ORIGIN_ID_COLUMN]
-                destination_id  = update_route_segment[self._RS_DESTINATION_ID_COLUMN]
-                origin_address = self.get_pickup_point(origin_id)[self._PP_ADDRESS_COLUMN]
-                destination_address = self.get_pickup_point(destination_id)[self._PP_ADDRESS_COLUMN]
-                calculated_duration , calculated_distance = self.google.calculate_duration(origin_address, destination_address)   
-                self.update_route_segment(route_segment_id = update_route_segment[self._RS_ID_COLUMN], new_duration = calculated_duration, new_distance = calculated_distance)
+                origin_id = update_route_segment[self.db.RS_ORIGIN_ID_COLUMN]
+                destination_id = update_route_segment[self.db.RS_DESTINATION_ID_COLUMN]
+                origin_address = self.get_pickup_point(
+                    origin_id)[self.db.PP_ADDRESS_COLUMN]
+                destination_address = self.get_pickup_point(
+                    destination_id)[self.db.PP_ADDRESS_COLUMN]
+                calculated_duration, calculated_distance = self.google.calculate_duration(
+                    origin_address, destination_address)
+                self.update_route_segment(
+                    route_segment_id=update_route_segment[self.db.RS_ID_COLUMN], new_duration=calculated_duration, new_distance=calculated_distance)
         else:
             print("Error: update_route_segmentの呼び出しエラー")
             return None
-    
