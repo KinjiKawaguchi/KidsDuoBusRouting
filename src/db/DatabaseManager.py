@@ -21,7 +21,7 @@ class DatabaseManager:
         ''')
 
         self.cursor.execute('''
-            CREATE TABLE IF NOT EXISTS route_segments (
+            CREATE TABLE IF NOT EXISTS route_segment (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 origin_id INTEGER,
                 destination_id INTEGER,
@@ -101,12 +101,12 @@ class DatabaseManager:
 
     def is_route_segment_exits(self, origin_id, destination_id):
         self.cursor.execute(
-            "SELECT * FROM route_segments WHERE origin_id = ? AND destination_id = ?", (origin_id, destination_id))
+            "SELECT * FROM route_segment WHERE origin_id = ? AND destination_id = ?", (origin_id, destination_id))
         return self.cursor.fetchone() is not None
 
     def add_route_segment(self, added_id, comparing_id, duration, distance):
         self.cursor.execute(
-            "INSERT INTO route_segments (origin_id, destination_id, duration, distance) VALUES (?, ?, ?, ?)",
+            "INSERT INTO route_segment (origin_id, destination_id, duration, distance) VALUES (?, ?, ?, ?)",
             (added_id, comparing_id, duration, distance))
         self.conn.commit()
         return self.cursor.fetchone()
@@ -114,36 +114,39 @@ class DatabaseManager:
     def get_route_segment(self, pickup_point_id, destination_id=None):
         if destination_id is None:
             self.cursor.execute(
-                "SELECT * FROM route_segments WHERE origin_id = ? OR destination_id = ?",
+                "SELECT * FROM route_segment WHERE origin_id = ? OR destination_id = ?",
                 (pickup_point_id, pickup_point_id))
             return self.cursor.fetchall()
         else:
             self.cursor.execute(
-                "SELECT * FROM route_segments WHERE origin_id = ? AND destination_id = ?",
+                "SELECT * FROM route_segment WHERE origin_id = ? AND destination_id = ?",
                 (pickup_point_id, destination_id))
             return self.cursor.fetchone()
 
-    def get_all_route_segments(self):
-        self.cursor.execute("SELECT * FROM route_segments")
+    def get_all_route_segment(self):
+        self.cursor.execute("SELECT * FROM route_segment")
         return self.cursor.fetchall()
 
     def update_route_segment(self, id,  new_duration, new_distance):
         self.cursor.execute(
-            "UPDATE route_segments SET  duration = ?, distance = ? WHERE id = ?",
+            "UPDATE route_segment SET  duration = ?, distance = ? WHERE id = ?",
             (new_duration, new_distance, id))
         updated_data = self.cursor.fetchone()
         return updated_data
     
     def delete_route_segment(self, route_segment_id = None, origin_id = None, destination_id = None):
         if route_segment_id is not None:
-            self.cursor.execute("DELETE FROM route_segments WHERE id = ?", (id,))
+            self.cursor.execute("SELECT * FROM route_segment WHERE id = ?", (route_segment_id,))
             deleted_data = self.cursor.fetchone()
+            self.cursor.execute("DELETE FROM route_segment WHERE id = ?", (route_segment_id,))
             return deleted_data
         elif origin_id and destination_id is not None:
-            self.cursor.execute("DELETE FROM route_segments WHERE origin_id = ? AND destination_id = ?",
-                    (origin_id, destination_id))
+            self.cursor.execute("SELECT * FROM route_segment WHERE origin_id = ? AND destination_id = ?",(origin_id, destination_id))
             deleted_data = self.cursor.fetchone()
+            self.cursor.execute("DELETE FROM route_segment WHERE origin_id = ? AND destination_id = ?",
+                    (origin_id, destination_id))
             return deleted_data
         else:
             print("Error: delete_route_segment呼び出しコーディングエラー")
             return None
+        
