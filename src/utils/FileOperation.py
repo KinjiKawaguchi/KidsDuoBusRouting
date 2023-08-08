@@ -200,7 +200,6 @@ class FileOperation:
             print(f"ID: {deleted_route_segment[self.db.RS_ID_COLUMN]} OriginName: {origin_name} OriginAddress: {origin_address} DestionationName: {destination_name} DestionationAddress: {destination_address} Duration: {deleted_route_segment[self.db.RS_DURATION_COLUMN]} Distance: {deleted_route_segment[self.db.RS_DISTANCE_COLUMN]}")
 
     def register_route_segment(self, added_pickup_point):
-
         added_id = added_pickup_point[0]
         added_address = added_pickup_point[2]
 
