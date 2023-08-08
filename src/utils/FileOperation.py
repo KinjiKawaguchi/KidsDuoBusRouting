@@ -191,7 +191,7 @@ class FileOperation:
         
             
 
-    def add_route_segment(self, added_pickup_point):
+    def register_route_segment(self, added_pickup_point):
         google = GoogleMapsClient()
 
         added_id = added_pickup_point[0]
