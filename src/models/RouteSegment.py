@@ -39,7 +39,7 @@ class RouteSegment:
         self.__origin_pickup_point = origin_pickup_point
         
     def set_destination_pickup_point(self, destination_pickup_point):
-        self.__destination_id = destination_pickup_point
+        self.__destination_pickup_point = destination_pickup_point
         
     def set_duration(self, duration):
         self.__duration = duration
