@@ -11,7 +11,10 @@ from src.models.Student import Student
 
 
 class FileOperation:
-    API_KEY = ""
+    _ORIGIN_ID = 1
+    _STUDENT_DATA_ROW_COLUMN = 3
+    _PICKUP_POINT_DATA_ROW_COLUMN = 4
+    _ROUTE_SEGMENT_DATA_ROW_COLUMN = 5
 
     def __init__(self):
         self.file_path = ''
@@ -45,7 +48,7 @@ class FileOperation:
             return None
 
         try:
-            with open(file_path, "r", encoding=encoding_type) as file:
+            with open(file_path, "r", encoding=encoding_type, errors='replace') as file:
                 reader = csv.reader(file)
                 return list(reader)
         except Exception as e:
@@ -58,7 +61,7 @@ class FileOperation:
         students = []
 
         for row in rows:
-            if len(row) != 3:
+            if len(row) != self._STUDENT_DATA_ROW_COLUMN:
                 print("Error: データが不正です。")
                 return None
 
@@ -98,29 +101,31 @@ class FileOperation:
         # Determine the file encoding
         with open(file_path, 'rb') as f:
             result = chardet.detect(f.read())
-        
+
         encoding = result['encoding']
-        
+
         rows = self.read_csv(file_path, encoding)
+        if rows is None:
+            print("Error: データの登録に失敗しました。")
+            return None
 
         for row in rows:
-            if len(row) != 4:
+            if len(row) != self._PICKUP_POINT_DATA_ROW_COLUMN:
                 print("Error: データが不正です。")
                 return None
 
-        registered_datas = []
+        registered_data_list = []
         for row in rows:
             name, address, is_origin, can_wait = row
-            if self.db.is_pickup_point_exits(name, address):
-                print(f"Error: '{name}' already exists in the database.")
+            if self.db.is_pickup_point_exists(name=name, address=address):
+                print(f"Error: '{name}' , '{address}'はすでにレコードに存在しています。")
             else:
                 added_pickup_point = self.db.add_pickup_point(
                     name, address, is_origin, can_wait)
-                for added_pickup_point in added_pickup_point:
-                    self.db.add_route_segment()
-                registered_datas.append(row)
+                self.register_route_segment(added_pickup_point)
+                registered_data_list.append(row)
 
-        return registered_datas
+        return registered_data_list
 
     def is_file_right(self, file_path):
         if not os.path.exists(file_path):
@@ -192,8 +197,7 @@ class FileOperation:
         added_id = added_pickup_point[0]
         added_address = added_pickup_point[2]
 
-        self.db.get_route_segment(0)
-        comparing_pickup_point = self.cursor.fetchone()
+        comparing_pickup_point = self.db.get_pickup_point(self._ORIGIN_ID)
 
         while comparing_pickup_point != added_pickup_point:
             comparisonId = comparing_pickup_point[0]
@@ -210,11 +214,9 @@ class FileOperation:
                 comparisonId, added_id, duration, distance)
 
             i = 1
-            while not (self.is_pickup_point_exits(comparing_pickup_point[0] + 1)):
+            while not (self.db.is_pickup_point_exists(id=comparing_pickup_point[0] + i)):
                 i += 1
-            self.db.get_route_segment(comparing_pickup_point[0] + i)
-            comparing_pickup_point = self.cursor.fetchone()
-        self.conn.commit()
+            comparing_pickup_point = self.db.get_pickup_point(comparing_pickup_point[0] + i)
 
     def print_all_route_segment(self):
         route_segments = self.db.get_all_route_segments()
