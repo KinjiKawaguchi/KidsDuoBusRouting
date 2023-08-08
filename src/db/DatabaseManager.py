@@ -133,14 +133,17 @@ class DatabaseManager:
             (new_duration, new_distance, id))
         updated_data = self.cursor.fetchone()
         return updated_data
-
-    def delete_route_segment(self, id):
-        self.cursor.execute("DELETE FROM route_segments WHERE id = ?", (id,))
-        deleted_data = self.cursor.fetchone()
-        return deleted_data
-
-    def delete_route_segment(self, origin_id, destination_id):
-        self.cursor.execute("DELETE FROM route_segments WHERE origin_id = ? AND destination_id = ?",
-                            (origin_id, destination_id))
-        deleted_data = self.cursor.fetchone()
-        return deleted_data
+    
+    def delete_route_segment(self, route_segment_id = None, origin_id = None, destination_id = None):
+        if route_segment_id is not None:
+            self.cursor.execute("DELETE FROM route_segments WHERE id = ?", (id,))
+            deleted_data = self.cursor.fetchone()
+            return deleted_data
+        elif origin_id and destination_id is not None:
+            self.cursor.execute("DELETE FROM route_segments WHERE origin_id = ? AND destination_id = ?",
+                    (origin_id, destination_id))
+            deleted_data = self.cursor.fetchone()
+            return deleted_data
+        else:
+            print("Error: delete_route_segment呼び出しコーディングエラー")
+            return None
