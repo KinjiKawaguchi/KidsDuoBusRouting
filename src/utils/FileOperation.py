@@ -51,13 +51,13 @@ class FileOperation:
             print(f"Error: CSVファイルの読み込み中にエラーが発生しました: {e}")
             return None
 
-    def instantiate_student(self, filePath):
-        rows = self.read_csv(filePath, "utf-8")
+    def instantiate_student(self, file_path):
+        rows = self.read_csv(file_path, "utf-8")
 
         students = []
 
         for row in rows:
-            if len(row) != self.db.STUDENT_DATA_ROW_COLUMN:
+            if len(row) != self.db.STUDENT_DATA_COLUMN_NUM:
                 print("Error: データが不正です。")
                 return None
 
@@ -106,7 +106,7 @@ class FileOperation:
             return None
 
         for row in rows:
-            if len(row) != self.db.PICKUP_POINT_DATA_ROW_COLUMN:
+            if len(row) != self.db.PICKUP_POINT_DATA_COLUMN_NUM:
                 print("Error: データが不正です。")
                 return None
 
@@ -166,7 +166,7 @@ class FileOperation:
 
         updated_data = self.db.update_pickup_point(
             id, new_name, new_address, new_can_wait)
-        if updated_data != None:
+        if updated_data is not None:
             pass
 
     def delete_pickup_point(self, id):
@@ -174,17 +174,38 @@ class FileOperation:
         if deleted_pickup_point is None:
             print("Error: データの削除に失敗しました。")
             return None
-        deleted_route_segment_list = self.delete_route_segment(deleted_pickup_point[0])
+        result = deleted_route_segment_list = self.delete_route_segment(
+            deleted_pickup_point[self.db.PP_ID_COLUMN])
 
         print("削除に成功したピックアップポイントのデータは以下の通りです。")
         print("====================================")
-        can_wait = True if deleted_pickup_point[self.db._PP_CAN_WAIT_COLUMN] == 1 else False
-        is_origin = True if deleted_pickup_point[self.db._PP_IS_ORIGIN_COLUMN] == 1 else False
-        print(f"ID: {deleted_pickup_point[self._PP_ID_COLUMN]} NAME: {deleted_pickup_point[self._PP_NAME_COLUMN]} Address: {deleted_pickup_point[self._PP_ADDRESS_COLUMN]} IsOrigin: {is_origin} CanWait: {can_wait}")
+        can_wait = True if deleted_pickup_point[self.db.PP_CAN_WAIT_COLUMN] == 1 else False
+        is_origin = True if deleted_pickup_point[self.db.PP_IS_ORIGIN_COLUMN] == 1 else False
+        print(
+            f"ID: {deleted_pickup_point[self.db.PP_ID_COLUMN]} NAME: {deleted_pickup_point[self.db.PP_NAME_COLUMN]} Address: {deleted_pickup_point[self.db.PP_ADDRESS_COLUMN]} IsOrigin: {is_origin} CanWait: {can_wait}")
         print("削除に成功したルートセグメントのデータは以下の通りです。")
         print("====================================")
         for deleted_route_segment in deleted_route_segment_list:
-            pass
+            if result is not None:
+                origin_id = deleted_route_segment[self.db.RS_ORIGIN_ID_COLUMN]
+                destination_id = deleted_route_segment[self.db.RS_DESTINATION_ID_COLUMN]
+
+                origin_name, origin_address = self._get_name_and_address(origin_id, deleted_pickup_point)
+                destination_name, destination_address = self._get_name_and_address(destination_id, deleted_pickup_point)
+                print(
+                    f"ID: {deleted_route_segment[self.db.RS_ID_COLUMN]} {deleted_route_segment[self.db.RS_ORIGIN_ID_COLUMN]}{origin_name}({origin_address}) -> {deleted_route_segment[self.db.RS_DESTINATION_ID_COLUMN]}{destination_name}({destination_address}) Duration: {deleted_route_segment[self.db.RS_DURATION_COLUMN]} Distance: {deleted_route_segment[self.db.RS_DISTANCE_COLUMN]})")
+            else:
+                print(f"Error: データの削除に失敗しました。")
+
+    def _get_name_and_address(self, point_id, deleted_pickup_point):
+        if point_id == deleted_pickup_point[self.db.PP_ID_COLUMN]:
+            name = deleted_pickup_point[self.db.PP_NAME_COLUMN]
+            address = deleted_pickup_point[self.db.PP_ADDRESS_COLUMN]
+        else:
+            pickup_point = self.get_pickup_point(point_id)
+            name = pickup_point[self.db.PP_NAME_COLUMN]
+            address = pickup_point[self.db.PP_ADDRESS_COLUMN]
+        return name, address
 
     def register_route_segment(self, added_pickup_point):
         added_id = added_pickup_point[0]
@@ -208,43 +229,48 @@ class FileOperation:
                 comparisonId, added_id, duration, distance)
 
             i = 1
-            while not (self.db.is_pickup_point_exists(id = comparing_pickup_point[0] + i)):
+            while not (self.db.is_pickup_point_exists(id=comparing_pickup_point[0] + i)):
                 i += 1
             comparing_pickup_point = self.db.get_pickup_point(
                 comparing_pickup_point[0] + i)
 
     def print_all_route_segment(self):
-        route_segments = self.db.get_all_route_segments()
-        if route_segments == []:
+        route_segment_list = self.db.get_all_route_segment()
+        if route_segment_list == []:
             print("Error: データベースにデータが存在しません。")
             return None
         print("登録されたデータは以下の通りです。")
         print("====================================")
-        for route_segment in route_segments:
+        for route_segment in route_segment_list:
             print(
                 f"ID: {route_segment[0]}, Origin: {route_segment[1]}, Destination: {route_segment[2]}, Duration: {route_segment[3]}, Distance: {route_segment[4]}")
-        return route_segments
+        return route_segment_list
 
     def get_route_segment(self, id):
         route_segment = self.db.get_route_segment(id)
         if route_segment == []:
             return None
         return route_segment
-    
-        #削除はピックアップポイントが削除された時のみ実行される
+
+        # 削除はピックアップポイントが削除された時のみ実行される
+
     def delete_route_segment(self, deleted_pickup_point_id):
-        route_segment_to_delete_list = self.db.get_route_segment(pickup_point_id = deleted_pickup_point_id)
+        route_segment_to_delete_list = self.db.get_route_segment(
+            pickup_point_id=deleted_pickup_point_id)
         deleted_route_segment_list = []
         for route_segment_to_delete in route_segment_to_delete_list:
-            deleted_route_segment = self.db.delete_route_segment(route_segment_id = route_segment_to_delete[0])
+            deleted_route_segment = self.db.delete_route_segment(
+                route_segment_id=route_segment_to_delete[0])
             if deleted_route_segment is not None:
                 deleted_route_segment_list.append(route_segment_to_delete)
         return deleted_route_segment_list
 
-    #更新はピックアップポイントのデータ更新のタイミング、またはユーザがルートセグメントの情報を編集する場合に行われる
-    def update_route_segment(self, updated_pickup_point_id = None, route_segment_id = None, new_duration = None, new_distance = None):
+    # 更新はピックアップポイントのデータ更新のタイミング、またはユーザがルートセグメントの情報を編集する場合に行われる
+    def update_route_segment(self, updated_pickup_point_id=None, route_segment_id=None, new_duration=None,
+                             new_distance=None):
         if route_segment_id and new_duration and new_distance is not None:
-            current_route_segment = self.db.get_route_segment(route_segment_id = route_segment_id)
+            current_route_segment = self.db.get_route_segment(
+                route_segment_id=route_segment_id)
             updated_route_segment = self.db.update_route_segment(
                 route_segment_id, new_duration, new_distance)
             if updated_route_segment != []:
@@ -268,7 +294,8 @@ class FileOperation:
                 calculated_duration, calculated_distance = self.google.calculate_duration(
                     origin_address, destination_address)
                 self.update_route_segment(
-                    route_segment_id=update_route_segment[self.db.RS_ID_COLUMN], new_duration=calculated_duration, new_distance=calculated_distance)
+                    route_segment_id=update_route_segment[self.db.RS_ID_COLUMN], new_duration=calculated_duration,
+                    new_distance=calculated_distance)
         else:
             print("Error: update_route_segmentの呼び出しエラー")
             return None

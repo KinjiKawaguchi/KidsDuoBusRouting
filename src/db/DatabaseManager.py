@@ -153,10 +153,14 @@ class DatabaseManager:
     
     def delete_route_segment(self, route_segment_id = None, origin_id = None, destination_id = None):
         if route_segment_id is not None:
-            self.cursor.execute("SELECT * FROM route_segment WHERE id = ?", (route_segment_id,))
-            deleted_data = self.cursor.fetchone()
-            self.cursor.execute("DELETE FROM route_segment WHERE id = ?", (route_segment_id,))
-            return deleted_data
+            try:
+                self.cursor.execute("SELECT * FROM route_segment WHERE id = ?", (route_segment_id,))
+                deleted_data = self.cursor.fetchone()
+                self.cursor.execute("DELETE FROM route_segment WHERE id = ?", (route_segment_id,))
+                self.conn.commit()
+                return deleted_data
+            except Exception as e:
+                print(f"An error occurred while deleting the route segment: {e}")
         elif origin_id and destination_id is not None:
             self.cursor.execute("SELECT * FROM route_segment WHERE origin_id = ? AND destination_id = ?",(origin_id, destination_id))
             deleted_data = self.cursor.fetchone()
