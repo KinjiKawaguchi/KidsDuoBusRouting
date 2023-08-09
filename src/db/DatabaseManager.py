@@ -95,7 +95,7 @@ class DatabaseManager:
 
     def update_pickup_point(self, id, new_name, new_address, new_can_wait):
         self.cursor.execute(
-            "UPDATE pickup_point SET name = ?, address = ? , can_wait = ?, WHERE id = ?", (new_name, new_address, new_can_wait, id))
+            "UPDATE pickup_point SET name = ?, address = ?, can_wait = ? WHERE id = ?",(new_name, new_address, new_can_wait, id))
         self.conn.commit()
         # Return the updated data
         self.cursor.execute("SELECT * FROM pickup_point WHERE id = ?", (id,))
@@ -128,26 +128,36 @@ class DatabaseManager:
         self.conn.commit()
         return self.cursor.fetchone()
 
-    def get_route_segment(self, pickup_point_id, destination_id=None):
-        if destination_id is None:
+    def get_route_segment(self, route_segment_id=None, pickup_point_id=None, origin_id=None, destination_id=None):
+        if route_segment_id is not None:
+            self.cursor.execute(
+                "SELECT * FROM route_segment WHERE id = ?", (route_segment_id,))
+            return self.cursor.fetchone()
+        elif destination_id and origin_id is not None:
+            self.cursor.execute(
+                "SELECT * FROM route_segment WHERE origin_id = ? AND destination_id = ?",
+                (origin_id, origin_id))
+            return self.cursor.fetchall()
+        elif pickup_point_id is not None:
             self.cursor.execute(
                 "SELECT * FROM route_segment WHERE origin_id = ? OR destination_id = ?",
                 (pickup_point_id, pickup_point_id))
             return self.cursor.fetchall()
         else:
-            self.cursor.execute(
-                "SELECT * FROM route_segment WHERE origin_id = ? AND destination_id = ?",
-                (pickup_point_id, destination_id))
-            return self.cursor.fetchone()
+            print("get_route_segmentメソッドの呼び出しエラー")
+            return None
 
     def get_all_route_segment(self):
         self.cursor.execute("SELECT * FROM route_segment")
         return self.cursor.fetchall()
 
-    def update_route_segment(self, id,  new_duration, new_distance):
+    def update_route_segment(self, route_segment_id, new_duration, new_distance):
         self.cursor.execute(
             "UPDATE route_segment SET  duration = ?, distance = ? WHERE id = ?",
-            (new_duration, new_distance, id))
+            (new_duration, new_distance, route_segment_id))
+        self.conn.commit()
+        self.cursor.execute(
+            "SELECT * FROM route_segment WHERE id = ?", (route_segment_id,))
         updated_data = self.cursor.fetchone()
         return updated_data
     

@@ -163,11 +163,10 @@ class FileOperation:
         return pickup_points
 
     def update_pickup_point(self, id, new_name, new_address, new_can_wait):
-
         updated_data = self.db.update_pickup_point(
             id, new_name, new_address, new_can_wait)
         if updated_data is not None:
-            pass
+            self.update_route_segment(updated_data[self.db.PP_ID_COLUMN])
 
     def delete_pickup_point(self, id):
         deleted_pickup_point = self.db.delete_pickup_point(id)
@@ -246,11 +245,25 @@ class FileOperation:
                 f"ID: {route_segment[0]}, Origin: {route_segment[1]}, Destination: {route_segment[2]}, Duration: {route_segment[3]}, Distance: {route_segment[4]}")
         return route_segment_list
 
-    def get_route_segment(self, id):
-        route_segment = self.db.get_route_segment(id)
-        if route_segment == []:
+    def get_route_segment(self, route_segment_id=None,pickup_point_id=None,origin_id=None,destination_id=None):
+        if route_segment_id is not None:
+            route_segment = self.db.get_route_segment(route_segment_id=route_segment_id)
+            if route_segment == []:
+                return None
+            return route_segment
+        elif pickup_point_id is not None:
+            route_segment_list = self.db.get_route_segment(pickup_point_id=pickup_point_id)
+            if route_segment_list == []:
+                return None
+            return route_segment_list
+        elif origin_id is not None and destination_id is not None:
+            route_segment = self.db.get_route_segment(origin_id=origin_id, destination_id=destination_id)
+            if route_segment == []:
+                return None
+            return route_segment
+        else:
+            print("get_route_segmentの引数が不正です。")
             return None
-        return route_segment
 
         # 削除はピックアップポイントが削除された時のみ実行される
 
@@ -268,34 +281,32 @@ class FileOperation:
     # 更新はピックアップポイントのデータ更新のタイミング、またはユーザがルートセグメントの情報を編集する場合に行われる
     def update_route_segment(self, updated_pickup_point_id=None, route_segment_id=None, new_duration=None,
                              new_distance=None):
-        if route_segment_id and new_duration and new_distance is not None:
-            current_route_segment = self.db.get_route_segment(
-                route_segment_id=route_segment_id)
-            updated_route_segment = self.db.update_route_segment(
-                route_segment_id, new_duration, new_distance)
-            if updated_route_segment != []:
-                print("更新に成功したデータは以下の通りです。")
-                print("====================================")
-                print(
-                    f"ID: {updated_route_segment[0]}, Origin: {updated_route_segment[1]}, Destination: {updated_route_segment[2]}, Duration: {updated_route_segment[3]}, Distance: {updated_route_segment[4]}")
-                return updated_route_segment
-            print("更新に失敗しました。")
-            return None
-        elif updated_pickup_point_id is not None:
-            update_route_segment_list = self.get_route_segmnet(
-                pickup_point_id=updated_pickup_point_id)
-            for update_route_segment in update_route_segment_list:
-                origin_id = update_route_segment[self.db.RS_ORIGIN_ID_COLUMN]
-                destination_id = update_route_segment[self.db.RS_DESTINATION_ID_COLUMN]
+        if updated_pickup_point_id is not None:
+            route_segment_to_update_list = self.get_route_segment(pickup_point_id=updated_pickup_point_id)
+            for route_segment_to_update in route_segment_to_update_list:
                 origin_address = self.get_pickup_point(
-                    origin_id)[self.db.PP_ADDRESS_COLUMN]
+                    route_segment_to_update[self.db.RS_ORIGIN_ID_COLUMN])[self.db.PP_ADDRESS_COLUMN]
                 destination_address = self.get_pickup_point(
-                    destination_id)[self.db.PP_ADDRESS_COLUMN]
+                    route_segment_to_update[self.db.RS_DESTINATION_ID_COLUMN])[self.db.PP_ADDRESS_COLUMN]
                 calculated_duration, calculated_distance = self.google.calculate_duration(
                     origin_address, destination_address)
                 self.update_route_segment(
-                    route_segment_id=update_route_segment[self.db.RS_ID_COLUMN], new_duration=calculated_duration,
+                    route_segment_id=route_segment_to_update[self.db.RS_ID_COLUMN], new_duration=calculated_duration,
                     new_distance=calculated_distance)
+        elif route_segment_id and new_duration and new_distance is not None:
+            current_route_segment = self.get_route_segment(route_segment_id)
+            updated_route_segment = self.db.update_route_segment(
+                route_segment_id, new_duration, new_distance)
+            if updated_route_segment is not None:
+                print("更新に成功したデータは以下の通りです。")
+                print("====================================")
+                print(f"ID:{current_route_segment[self.db.RS_ID_COLUMN]} Origin: {current_route_segment[self.db.RS_ORIGIN_ID_COLUMN]}, Destination: {current_route_segment[self.db.RS_DESTINATION_ID_COLUMN]}, Duration: {current_route_segment[self.db.RS_DURATION_COLUMN]}, Distance: {current_route_segment[self.db.RS_DISTANCE_COLUMN]}")
+                print("↓")
+                print(f"ID: {updated_route_segment[self.db.RS_ID_COLUMN]}, Origin: {updated_route_segment[self.db.RS_ORIGIN_ID_COLUMN]}, Destination: {updated_route_segment[self.db.RS_DESTINATION_ID_COLUMN]}, Duration: {updated_route_segment[self.db.RS_DURATION_COLUMN]}, Distance: {updated_route_segment[self.db.RS_DISTANCE_COLUMN]}")
+                return updated_route_segment
+            print("更新に失敗しました。")
+            return None
+
         else:
             print("Error: update_route_segmentの呼び出しエラー")
             return None

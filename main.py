@@ -98,17 +98,20 @@ if __name__ == "__main__":
             if crud_action == 1:
                 fo.print_all_route_segment()
             elif crud_action == 2:
+                print("この機能は未実装です。")
+                pass
+                """
                 route_segments = fo.print_all_route_segment()
                 if route_segments is not None:
                     pickup_point_id_list = co.receive_multiple_str_input(
                         "更新するデータのIDを入力してください。(複数可):")
                     for pickup_point_id in pickup_point_id_list:
                         origin_name = fo.get_pickup_point(
-                            fo.get_route_segment(pickup_point_id)[5])[1]
+                            fo.get_route_segment(pickup_point_id=pickup_point_id)[5])[1]
                         destination_name = fo.get_pickup_point(
-                            fo.get_route_segment(pickup_point_id)[6])[1]
-                        current_duration = fo.get_route_segment(pickup_point_id)[3]
-                        current_distance = fo.get_route_segment(pickup_point_id)[4]
+                            fo.get_route_segment(pickup_point_id=pickup_point_id)[6])[1]
+                        current_duration = fo.get_route_segment(pickup_point_id=pickup_point_id)[3]
+                        current_distance = fo.get_route_segment(pickup_point_id=pickup_point_id)[4]
 
                         print(
                             f"ID {pickup_point_id} の出発地点は {origin_name}で、到着地点は{destination_name} です。")
@@ -121,6 +124,7 @@ if __name__ == "__main__":
                             f"ID {pickup_point_id}に対して新しく登録する距離を入力: ")
 
                         fo.update_route_segment(pickup_point_id, new_duration, new_distance)
+                        """
             elif crud_action == 3:
                 print("終了します。")
                 sys.exit()
