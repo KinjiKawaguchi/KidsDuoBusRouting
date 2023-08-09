@@ -3,32 +3,36 @@ import json
 from urllib.parse import quote
 
 class GoogleMapsClient:
-    def __init__(self):
-        self.API_KEY = ""
+    def __init__(self, api_key):
+        self.API_KEY = api_key
 
     def calculate_duration(self, from_address, to_address):
-        # URLエンコードを適用
+        """
+        Calculates the duration and distance between two addresses using the Google Maps API.
+
+        :param from_address: Starting address
+        :param to_address: Destination address
+        :return: Tuple containing duration and distance, or (None, None) if an error occurs
+        """
+        # URL-encode the addresses
         origin = quote(from_address)
         destination = quote(to_address)
 
-        # APIリクエストのURLを作成
+        # Construct the API request URL
         url = f"https://maps.googleapis.com/maps/api/distancematrix/json?origins={origin}&destinations={destination}&key={self.API_KEY}"
 
-        # APIリクエストを実行
+        # Execute the API request
         response = requests.get(url)
 
-        # 応答をJSON形式でパース
+        # Parse the response into JSON format
         data = json.loads(response.text)
 
-        # 応答から所要時間と距離を取得
+        # Extract the duration and distance from the response
         try:
-            rows = data["rows"]
-            elements = rows[0]["elements"]
-            duration = elements[0]["duration"]["text"]
-            distance = elements[0]["distance"]["text"]
+            duration = data["rows"][0]["elements"][0]["duration"]["text"]
+            distance = data["rows"][0]["elements"][0]["distance"]["text"]
         except KeyError:
-            duration = None
-            distance = None
-        print(duration, distance)
+            print("Error: Unable to retrieve duration and distance.")
+            duration, distance = None, None
 
         return duration, distance
