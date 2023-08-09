@@ -38,3 +38,5 @@ src/services/__pycache__/BusRouting.cpython-310.pyc
 src/db/__pycache__/DatabaseManager.cpython-310.pyc
 src/api/__pycache__/GoogleMapsClient.cpython-311.pyc
 src/api/__pycache__/GoogleMapsClient.cpython-310.pyc
+src/models/__pycache__/PickupPoint.cpython-311.pyc
+src/models/__pycache__/RouteSegment.cpython-311.pyc
