@@ -85,7 +85,7 @@ class FileOperation:
             return False
         return True
 
-    def print_registered_data(self, rows):
+    def print_registered_data(self, rows):# TODO:このメソッドを改修する
         print("登録されたデータは以下の通りです。")
         print("====================================")
         for row in rows:
@@ -180,19 +180,19 @@ class FileOperation:
         return name, address
 
     def register_route_segment(self, added_pickup_point):
-        added_id, added_address = added_pickup_point[0], added_pickup_point[2]
+        added_id, added_address = added_pickup_point[self.db.PP_ID_COLUMN], added_pickup_point[self.db.PP_ADDRESS_COLUMN]
         comparing_pickup_point = self.db.get_pickup_point(self.db.ORIGIN_ID)
 
         while comparing_pickup_point != added_pickup_point:
-            comparison_id = comparing_pickup_point[0]
-            comparing_address = comparing_pickup_point[2]
+            comparison_id = comparing_pickup_point[self.db.PP_ID_COLUMN]
+            comparing_address = comparing_pickup_point[self.db.PP_ADDRESS_COLUMN]
 
             self._calculate_and_add_segment(added_id, comparison_id, added_address, comparing_address)
 
             i = 1
-            while not self.db.is_pickup_point_exists(id=comparing_pickup_point[0] + i):
+            while not self.db.is_pickup_point_exists(id=comparing_pickup_point[self.db.PP_ID_COLUMN] + i):
                 i += 1
-            comparing_pickup_point = self.db.get_pickup_point(comparing_pickup_point[0] + i)
+            comparing_pickup_point = self.db.get_pickup_point(comparing_pickup_point[self.db.PP_ID_COLUMN] + i)
 
     def _calculate_and_add_segment(self, origin_id, destination_id, origin_address, destination_address):
         duration, distance = self.google.calculate_duration(origin_address, destination_address)
@@ -210,7 +210,7 @@ class FileOperation:
         print("登録されたデータは以下の通りです。")
         print("====================================")
         for segment in route_segments:
-            print(f"ID: {segment[0]}, Origin: {segment[1]}, Destination: {segment[2]}, Duration: {segment[3]}, Distance: {segment[4]}")
+            print(f"ID: {segment[self.db.RS_ID_COLUMN]}, Origin: {segment[self.db.RS_ORIGIN_ID_COLUMN]}, Destination: {segment[self.db.RS_DESTINATION_ID_COLUMN]}, Duration: {segment[self.db.RS_DURATION_COLUMN]}, Distance: {segment[self.db.RS_DISTANCE_COLUMN]}")
         return route_segments
 
     def get_route_segment(self, route_segment_id=None, pickup_point_id=None, origin_id=None, destination_id=None):
@@ -218,7 +218,7 @@ class FileOperation:
 
     def delete_route_segments(self, deleted_pickup_point_id):
         segments_to_delete = self.db.get_route_segment(pickup_point_id=deleted_pickup_point_id)
-        deleted_segments = [segment for segment in segments_to_delete if self.db.delete_route_segment(route_segment_id=segment[0])]
+        deleted_segments = [segment for segment in segments_to_delete if self.db.delete_route_segment(route_segment_id=segment[self.db.RS_ID_COLUMN])]
         return deleted_segments
 
     def update_route_segment(self, updated_pickup_point_id=None, route_segment_id=None, new_duration=None, new_distance=None):

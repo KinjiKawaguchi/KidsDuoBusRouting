@@ -1,8 +1,11 @@
 ﻿import sys
 
+from db.DatabaseManager import DatabaseManager
+
 
 class ConsoleOperation:
     """-------------入力を受け取りメソッド類-------------"""
+
     def receive_input(self, options):
         while True:
             try:
@@ -30,7 +33,8 @@ class ConsoleOperation:
 
     def receive_multiple_str_input(self, message):
         while True:
-            user_input = input(f"{message} (複数のIDを入力する場合はスペースで区切ってください): ").strip()
+            user_input = input(
+                f"{message} (複数のIDを入力する場合はスペースで区切ってください): ").strip()
             if user_input:
                 if self.confirm_action(user_input):
                     return [str.strip() for str in user_input.split()]
@@ -40,14 +44,17 @@ class ConsoleOperation:
 
     def confirm_action(self, action):
         while True:
-            is_confirm = input(f"選択されたのは、{action}です。 この操作でよろしいですか？ (yes/no): ").lower()
+            is_confirm = input(
+                f"選択されたのは、{action}です。 この操作でよろしいですか？ (yes/no): ").lower()
             if is_confirm in ["yes", "no"]:
                 return is_confirm == "yes"
 
     """-------------メニュー表示類-------------"""
+
     def handle_main_manu(self, fo):
         while True:
-            main_menu_options = ["バスの経路を計算", "ピックアップポイントのデータ管理", "ルートセグメントのデータ管理", "終了"]
+            main_menu_options = ["バスの経路を計算",
+                                 "ピックアップポイントのデータ管理", "ルートセグメントのデータ管理", "終了"]
             self.print_menu("KidsDuoバスルーティングシステム", main_menu_options)
             action = self.receive_input(main_menu_options)
 
@@ -101,6 +108,7 @@ class ConsoleOperation:
             self.exit()
 
     """-------------ピックアップポイント操作類-------------"""
+
     def handle_pickup_point_creation(self, fo):
         options = ["ファイルから入力", "キーボードで入力", "終了"]
         self.print_menu("ピックアップポイントの登録", options)
@@ -120,21 +128,27 @@ class ConsoleOperation:
 
     def handle_pickup_point_update(self, fo):
         pickup_points = fo.print_all_pickup_point()
+        db = DatabaseManager('KidsDuoBusRouting.db')
         if pickup_points is not None:
-            pickup_point_id_list = self.receive_multiple_str_input("更新したいデータのIDを入力してください: ")
+            pickup_point_id_list = self.receive_multiple_str_input(
+                "更新したいデータのIDを入力してください: ")
             for pickup_point_id in pickup_point_id_list:
                 current_data = fo.get_pickup_point(pickup_point_id)
                 if current_data is None:
                     self.print_no_data_message()
                 else:
                     print(
-                        f"ID {pickup_point_id} \n名前: {current_data[1]}\n住所: {current_data[2]} \n教室データ:{current_data[3]}\n待てる場所か:{current_data[4]}")
+                        f"ID {pickup_point_id} \n名前: {current_data[db.PP_NAME_COLUMN]}\n住所: {current_data[db.PP_ADDRESS_COLUMN]} \n原点ピックアップポイント:{current_data[db.PP_IS_ORIGIN_COLUMN]}\n待てる場所か:{current_data[db.PP_CAN_WAIT_COLUMN]}")
 
-                    new_name = self.receive_single_str_input(f"ID {pickup_point_id} の新しい名前を入力してください: ")
-                    new_address = self.receive_single_str_input(f"ID {pickup_point_id} の新しい住所を入力してください:")
-                    new_can_wait = self.receive_single_str_input(f"ID {pickup_point_id} の待てる場所かを入力してください: ")
+                    new_name = self.receive_single_str_input(
+                        f"ID {pickup_point_id} の新しい名前を入力してください: ")
+                    new_address = self.receive_single_str_input(
+                        f"ID {pickup_point_id} の新しい住所を入力してください:")
+                    new_can_wait = self.receive_single_str_input(
+                        f"ID {pickup_point_id} の待てる場所かを入力してください: ")
 
-                    fo.update_pickup_point(pickup_point_id, new_name, new_address, new_can_wait)
+                    fo.update_pickup_point(
+                        pickup_point_id, new_name, new_address, new_can_wait)
                     print(f"ID {pickup_point_id} のデータを更新しました。")
 
     def handle_pickup_point_deletion(self, fo):
@@ -146,6 +160,7 @@ class ConsoleOperation:
                 fo.delete_pickup_point(pickup_point_id)
 
     """-------------ルートセグメント操作類-------------"""
+
     def handle_route_segment_update(self, fo):
         print("ルートセグメント情報を直接編集する機能は未実装です。")
         pass
