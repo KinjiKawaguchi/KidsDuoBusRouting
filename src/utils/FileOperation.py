@@ -2,8 +2,9 @@ import csv
 import os
 import tkinter as tk
 import chardet
+from tkinter import filedialog
 
-from tkinterdnd2 import DND_FILES, TkinterDnD
+
 from src.api.GoogleMapsClient import GoogleMapsClient
 from src.db.DatabaseManager import DatabaseManager
 from src.models.Student import Student
@@ -15,26 +16,18 @@ class FileOperation:
         self.db = DatabaseManager('KidsDuoBusRouting.db')
         self.google = GoogleMapsClient("")
 
-    def drop(self, event):
-        self.file_path = event.data
-        self.root.quit()
-
-    def setup_ui(self):
-        self.frame = tk.Frame(self.root, name='drag-drop-area', width=400, height=400)
-        self.frame.pack()
-        self.root.update()
-        self.root.dnd_accept = lambda x: x
-        self.root.protocol("WM_DELETE_WINDOW", self.root.destroy)
-        self.frame.drop_target_register(DND_FILES)
-        self.frame.dnd_bind('<<Drop>>', self.drop)
+    # dropメソッドとsetup_uiメソッドを削除
 
     def receive_file(self):
-        self.root = TkinterDnD.Tk()
-        self.root.withdraw()
-        self.setup_ui()
-        self.root.deiconify()
-        self.root.mainloop()
-        return self.file_path
+        print("receive_fileが呼び出されました") # この行を追加
+        root = tk.Tk()
+        root.withdraw() # 主要なウィンドウを隠す
+        file_path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")]) # CSVファイルのみをフィルタリング
+        if not file_path:
+            print("ファイルが選択されませんでした。")
+            return None
+        root.destroy() # Tkのルートウィンドウを破棄
+        return file_path
 
     def read_csv(self, file_path, encoding_type):
         if not self.is_file_right(file_path):
