@@ -6,7 +6,10 @@ class DatabaseManager:
     STUDENT_DATA_COLUMN_NUM = 3
     PICKUP_POINT_DATA_COLUMN_NUM = 4
     ROUTE_SEGMENT_DATA_COLUMN__NUM = 5
-
+    
+    PP_TABLE_NAME = "pickup_point"
+    RS_TABLE_NAME = "route_segment"
+    
     PP_ID_COLUMN = 0
     PP_NAME_COLUMN = 1
     PP_ADDRESS_COLUMN = 2
@@ -50,6 +53,11 @@ class DatabaseManager:
             );
         ''')
         self.conn.commit()
+        
+    #-------------------------(Common Table Operations)--------------------------------
+    def get_all_data(self, table_name):
+        self.cursor.execute(f"SELECT * FROM {table_name}")
+        return self.cursor.fetchall()
 
     # ------------------------(PickupPoint Table Operations)--------------------------------
 

@@ -1,6 +1,6 @@
 ﻿import sys
 
-from db.DatabaseManager import DatabaseManager
+from src.db.DatabaseManager import DatabaseManager
 
 
 class ConsoleOperation:
@@ -70,7 +70,7 @@ class ConsoleOperation:
                 self.print_unexpected_input_message()
 
     def handle_bus_route_calculation(self, fo):
-        print("バスのルート設計機能は未実装です。")
+        self.print_unimplemented_message()
         pass
         """
         file_path = fo.receive_file()
@@ -121,7 +121,7 @@ class ConsoleOperation:
             else:
                 self.fail_to_register_message()
         elif input_way == 2:
-            print("キーボードからの入力は現在未実装です。")
+            self.print_unimplemented_message()
             pass
         elif input_way == 3:
             self.exit()
@@ -162,7 +162,7 @@ class ConsoleOperation:
     """-------------ルートセグメント操作類-------------"""
 
     def handle_route_segment_update(self, fo):
-        print("ルートセグメント情報を直接編集する機能は未実装です。")
+        self.print_unimplemented_message()
         pass
         """
         route_segments = fo.print_all_route_segment()
@@ -206,6 +206,9 @@ class ConsoleOperation:
 
     def fail_to_register_message(self):
         self.print_error_message("データの登録に失敗しました。")
+        
+    def print_unimplemented_message(self):
+        self.print_error_message("この機能は未実装です。")
 
     def print_error_message(self, message):
         print(f"Error: {message}")

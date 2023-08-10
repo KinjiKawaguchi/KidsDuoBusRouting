@@ -13,7 +13,7 @@ class FileOperation:
     def __init__(self):
         self.file_path = ''
         self.db = DatabaseManager('KidsDuoBusRouting.db')
-        self.google = GoogleMapsClient()
+        self.google = GoogleMapsClient("")
 
     def drop(self, event):
         self.file_path = event.data
@@ -60,8 +60,8 @@ class FileOperation:
         return students
 
     def register_pickup_point(self, file_path):
-        if self.db.is_table_empty():
-            self._handle_empty_db()
+        if self.db.is_table_empty("pickup_point"):
+            self._handle_empty_db(self.db.PP_TABLE_NAME)
         if not self.is_file_right(file_path):
             return None
 
@@ -95,7 +95,7 @@ class FileOperation:
         return self.db.get_pickup_point(id)
 
     def print_all_pickup_point(self):
-        pickup_points = self.db.get_all_pickup_points()
+        pickup_points = self.db.get_all_data(self.db.PP_TABLE_NAME)
         if not pickup_points:
             print("Error: データベースにデータが存在しません。")
             return None
@@ -202,16 +202,15 @@ class FileOperation:
         self.db.add_route_segment(destination_id, origin_id, duration, distance)
 
     def print_all_route_segments(self):
-        route_segments = self.db.get_all_route_segment()
-        if not route_segments:
+        route_segment_list = self.db.get_all_data(self.db.RS_TABLE_NAME)
+        if not route_segment_list:
             print("Error: データベースにデータが存在しません。")
             return None
-
         print("登録されたデータは以下の通りです。")
         print("====================================")
-        for segment in route_segments:
+        for segment in route_segment_list:
             print(f"ID: {segment[self.db.RS_ID_COLUMN]}, Origin: {segment[self.db.RS_ORIGIN_ID_COLUMN]}, Destination: {segment[self.db.RS_DESTINATION_ID_COLUMN]}, Duration: {segment[self.db.RS_DURATION_COLUMN]}, Distance: {segment[self.db.RS_DISTANCE_COLUMN]}")
-        return route_segments
+        return route_segment_list
 
     def get_route_segment(self, route_segment_id=None, pickup_point_id=None, origin_id=None, destination_id=None):
         return self.db.get_route_segment(route_segment_id, pickup_point_id, origin_id, destination_id)
