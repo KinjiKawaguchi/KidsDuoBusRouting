@@ -75,6 +75,7 @@ class ConsoleOperation:
                 self.exit()
             else:
                 self.print_unexpected_input_message()
+            input("Enterを押してください。")
 
     def handle_bus_route_calculation(self, fo):
         self.print_unimplemented_message()

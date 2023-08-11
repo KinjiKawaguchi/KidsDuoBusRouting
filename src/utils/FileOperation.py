@@ -258,29 +258,45 @@ class FileOperation:
             print("Error: update_route_segmentの呼び出しエラー")
             return None
 
-    def _update_route_segments_by_pickup_point(self, pickup_point_id):
-        segments_to_update = self.get_route_segment(
-            pickup_point_id=pickup_point_id)
-        for segment in segments_to_update:
-            origin_address = self.get_pickup_point(segment[self.db.RS_ORIGIN_ID_COLUMN])[
-                self.db.PP_ADDRESS_COLUMN]
-            destination_address = self.get_pickup_point(
-                segment[self.db.RS_DESTINATION_ID_COLUMN])[self.db.PP_ADDRESS_COLUMN]
-            duration, distance = self.google.calculate_duration(
-                origin_address, destination_address)
-            self.update_route_segment(
-                route_segment_id=segment[self.db.RS_ID_COLUMN], new_duration=duration, new_distance=distance)
-
     def _update_specific_route_segment(self, route_segment_id, new_duration, new_distance):
         current_segment = self.get_route_segment(route_segment_id)
-        updated_segment = self.db.update_route_segment(route_segment_id, new_duration, new_distance)
+        updated_segment = self.db.update_route_segment(
+            route_segment_id, new_duration, new_distance)
         if updated_segment:
             print("更新に成功したデータは以下の通りです。")
             print("====================================")
-            print(f"ID:{current_segment[self.db.RS_ID_COLUMN]} Origin: {current_segment[self.db.RS_ORIGIN_ID_COLUMN]}, Destination: {current_segment[self.db.RS_DESTINATION_ID_COLUMN]}, Duration: {current_segment[self.db.RS_DURATION_COLUMN]}, Distance: {current_segment[self.db.RS_DISTANCE_COLUMN]}")
-            print("↓")
-            print(f"ID: {updated_segment[self.db.RS_ID_COLUMN]}, Origin: {updated_segment[self.db.RS_ORIGIN_ID_COLUMN]}, Destination: {updated_segment[self.db.RS_DESTINATION_ID_COLUMN]}, Duration: {updated_segment[self.db.RS_DURATION_COLUMN]}, Distance: {updated_segment[self.db.RS_DISTANCE_COLUMN]}")
+
+            current_id, current_origin_id, current_destination_id, current_duration, current_distance = \
+                self._extract_segment_data(current_segment)
+            updated_id, updated_origin_id, updated_destination_id, updated_duration, updated_distance = \
+                self._extract_segment_data(updated_segment)
+
+            # 結果を整形して出力
+            print("Segment Data:")
+            print(f"ID:           {current_id}")
+            print(
+                f"Origin:       {self._display_with_arrows(current_origin_id, updated_origin_id)}")
+            print(
+                f"Destination:  {self._display_with_arrows(current_destination_id, updated_destination_id)}")
+            print(
+                f"Duration:     {self._display_with_arrows(current_duration, updated_duration)}")
+            print(
+                f"Distance:     {self._display_with_arrows(current_distance, updated_distance)}")
+
             return updated_segment
         else:
             print("更新に失敗しました。")
             return None
+
+    def _extract_segment_data(self, segment):
+        segment_id = segment[self.db.RS_ID_COLUMN]
+        origin_id = segment[self.db.RS_ORIGIN_ID_COLUMN]
+        destination_id = segment[self.db.RS_DESTINATION_ID_COLUMN]
+        duration = segment[self.db.RS_DURATION_COLUMN]
+        distance = segment[self.db.RS_DISTANCE_COLUMN]
+        return segment_id, origin_id, destination_id, duration, distance
+
+    @staticmethod
+    def _display_with_arrows(current_data, updated_data):
+        arrow = "→" if current_data != updated_data else ""
+        return f"{current_data:<20} {arrow:<3} {updated_data}"
