@@ -15,6 +15,7 @@ class FileOperation:
         self.file_path = ''
         self.db = DatabaseManager('KidsDuoBusRouting.db')
         self.google = GoogleMapsClient("")
+        self.co = ConsoleOperation()
 
     @staticmethod
     def receive_file():
@@ -147,12 +148,13 @@ class FileOperation:
             if self.db.is_pickup_point_exists(name=name, address=address):
                 print(f"Error: '{name}' , '{address}'はすでにレコードに存在しています。")
             else:
-                added_pickup_point = self.db.add_pickup_point(name, address, is_origin, can_wait)
+                added_pickup_point = self.db.add_pickup_point(
+                    name, address, is_origin, can_wait)
                 self.register_route_segment(added_pickup_point)
                 registered_data_list.append(row)
         return registered_data_list
 
-    def _print_deleted_pickup_point(self, deleted_pickup_point, deleted_route_segment_list, result):
+    def _print_deleted_pickup_point(self, deleted_pickup_point, deleted_route_segment_list):
         print("削除に成功したピックアップポイントのデータは以下の通りです。")
         print("====================================")
         can_wait = True if deleted_pickup_point[self.db.PP_CAN_WAIT_COLUMN] == 1 else False

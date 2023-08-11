@@ -75,14 +75,9 @@ class DatabaseManager:
             raise ValueError("Either id or both name and address must be provided.")
         return self.cursor.fetchone() is not None
 
-    def is_table_empty(self, table_name):
-        self.cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
-        return self.cursor.fetchone()[0] == 0
-
     def add_pickup_point(self, name, address, can_wait, is_origin=False):
         can_wait_value = 1 if can_wait == "TRUE" else 0
         is_origin_value = 1 if is_origin == "TRUE" else 0
-
         try:
             self.cursor.execute(
                 "INSERT INTO pickup_point (name, address, is_origin, can_wait) VALUES (?, ?, ?, ?)",
