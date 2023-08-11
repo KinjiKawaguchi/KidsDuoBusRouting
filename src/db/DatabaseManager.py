@@ -1,5 +1,6 @@
 import sqlite3
 
+
 class DatabaseManager:
     # Constants for columns
     ORIGIN_ID = 1
@@ -54,7 +55,7 @@ class DatabaseManager:
         ''')
         self.conn.commit()
         
-    #-------------------------(Common Table Operations)--------------------------------
+    # -------------------------(Common Table Operations)--------------------------------
     def get_all_data(self, table_name):
         self.cursor.execute(f"SELECT * FROM {table_name}")
         return self.cursor.fetchall()
@@ -100,7 +101,8 @@ class DatabaseManager:
 
     def update_pickup_point(self, id, new_name, new_address, new_can_wait):
         self.cursor.execute(
-            "UPDATE pickup_point SET name = ?, address = ?, can_wait = ? WHERE id = ?", (new_name, new_address, new_can_wait, id))
+            "UPDATE pickup_point SET name = ?, address = ?, can_wait = ? WHERE id = ?",
+            (new_name, new_address, new_can_wait, id))
         self.conn.commit()
         # Return the updated data
         self.cursor.execute("SELECT * FROM pickup_point WHERE id = ?", (id,))

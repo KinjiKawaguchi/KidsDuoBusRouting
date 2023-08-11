@@ -2,6 +2,7 @@ import requests
 import json
 from urllib.parse import quote
 
+
 class GoogleMapsClient:
     def __init__(self, api_key):
         self.API_KEY = api_key
@@ -19,7 +20,8 @@ class GoogleMapsClient:
         destination = quote(to_address)
 
         # Construct the API request URL
-        url = f"https://maps.googleapis.com/maps/api/distancematrix/json?origins={origin}&destinations={destination}&key={self.API_KEY}"
+        url = f"https://maps.googleapis.com/maps/api/distancematrix/json?origins={origin}&destinations={destination}" \
+              f"&key={self.API_KEY}"
 
         # Execute the API request
         response = requests.get(url)

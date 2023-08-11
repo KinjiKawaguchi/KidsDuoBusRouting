@@ -48,8 +48,8 @@ class FileOperation:
             if len(row) != self.db.STUDENT_DATA_COLUMN_NUM:
                 print("Error: データが不正です。")
                 return None
-            name, address, dismissal_time = row
-            students.append(Student(name, address, dismissal_time))
+            name, grade, pickup_point, dismissal_time = row
+            students.append(Student(name, grade, pickup_point, dismissal_time))
         return students
 
     def register_pickup_point(self, file_path):
@@ -98,10 +98,10 @@ class FileOperation:
         print("====================================")
         for pickup_point in pickup_points:
             print(f"ID: {pickup_point[self.db.PP_ID_COLUMN]},"
-                f" Name: {pickup_point[self.db.PP_NAME_COLUMN]},"
-                f" Address: {pickup_point[self.db.PP_ADDRESS_COLUMN]},"
-                f" IsOrigin: {pickup_point[self.db.PP_IS_ORIGIN_COLUMN]},"
-                f" CanWait: {pickup_point[self.db.PP_CAN_WAIT_COLUMN]}")
+                  f" Name: {pickup_point[self.db.PP_NAME_COLUMN]},"
+                  f" Address: {pickup_point[self.db.PP_ADDRESS_COLUMN]},"
+                  f" IsOrigin: {pickup_point[self.db.PP_IS_ORIGIN_COLUMN]},"
+                  f" CanWait: {pickup_point[self.db.PP_CAN_WAIT_COLUMN]}")
         return pickup_points
 
     # TODO 入力の整合性確認(例:IDが存在するか、名前が空白でないか、など)
@@ -160,9 +160,9 @@ class FileOperation:
         can_wait = True if deleted_pickup_point[self.db.PP_CAN_WAIT_COLUMN] == 1 else False
         is_origin = True if deleted_pickup_point[self.db.PP_IS_ORIGIN_COLUMN] == 1 else False
         print(f"ID: {deleted_pickup_point[self.db.PP_ID_COLUMN]}"
-            f" NAME: {deleted_pickup_point[self.db.PP_NAME_COLUMN]}"
-            f" Address: {deleted_pickup_point[self.db.PP_ADDRESS_COLUMN]}"
-            f" IsOrigin: {is_origin} CanWait: {can_wait}")
+              f" NAME: {deleted_pickup_point[self.db.PP_NAME_COLUMN]}"
+              f" Address: {deleted_pickup_point[self.db.PP_ADDRESS_COLUMN]}"
+              f" IsOrigin: {is_origin} CanWait: {can_wait}")
         print("削除に成功したルートセグメントのデータは以下の通りです。")
         print("====================================")
         for deleted_route_segment in deleted_route_segment_list:
@@ -231,10 +231,10 @@ class FileOperation:
         print("====================================")
         for segment in route_segment_list:
             print(f"ID: {segment[self.db.RS_ID_COLUMN]}"
-                f" Origin: {segment[self.db.RS_ORIGIN_ID_COLUMN]}"
-                f" Destination: {segment[self.db.RS_DESTINATION_ID_COLUMN]}"
-                f" Duration: {segment[self.db.RS_DURATION_COLUMN]}"
-                f" Distance: {segment[self.db.RS_DISTANCE_COLUMN]}")
+                  f" Origin: {segment[self.db.RS_ORIGIN_ID_COLUMN]}"
+                  f" Destination: {segment[self.db.RS_DESTINATION_ID_COLUMN]}"
+                  f" Duration: {segment[self.db.RS_DURATION_COLUMN]}"
+                  f" Distance: {segment[self.db.RS_DISTANCE_COLUMN]}")
         return route_segment_list
 
     def get_route_segment(self, route_segment_id=None, pickup_point_id=None, origin_id=None, destination_id=None):
@@ -249,7 +249,7 @@ class FileOperation:
 
     # TODO 入力の整合性を確認する必要がある
     def update_route_segment(self, updated_pickup_point_id=None, route_segment_id=None, new_duration=None,
-                            new_distance=None):
+                             new_distance=None):
         if updated_pickup_point_id:
             self._update_route_segments_by_pickup_point(
                 updated_pickup_point_id)
@@ -279,9 +279,19 @@ class FileOperation:
         if updated_segment:
             print("更新に成功したデータは以下の通りです。")
             print("====================================")
-            print(f"ID:{current_segment[self.db.RS_ID_COLUMN]} Origin: {current_segment[self.db.RS_ORIGIN_ID_COLUMN]}, Destination: {current_segment[self.db.RS_DESTINATION_ID_COLUMN]}, Duration: {current_segment[self.db.RS_DURATION_COLUMN]}, Distance: {current_segment[self.db.RS_DISTANCE_COLUMN]}")
+            print(
+                f"ID:{current_segment[self.db.RS_ID_COLUMN]}, "
+                f"Origin: {current_segment[self.db.RS_ORIGIN_ID_COLUMN]}, "
+                f"Destination: {current_segment[self.db.RS_DESTINATION_ID_COLUMN]}, "
+                f"Duration: {current_segment[self.db.RS_DURATION_COLUMN]}, "
+                f"Distance: {current_segment[self.db.RS_DISTANCE_COLUMN]}")
             print("↓")
-            print(f"ID: {updated_segment[self.db.RS_ID_COLUMN]}, Origin: {updated_segment[self.db.RS_ORIGIN_ID_COLUMN]}, Destination: {updated_segment[self.db.RS_DESTINATION_ID_COLUMN]}, Duration: {updated_segment[self.db.RS_DURATION_COLUMN]}, Distance: {updated_segment[self.db.RS_DISTANCE_COLUMN]}")
+            print(
+                f"ID: {updated_segment[self.db.RS_ID_COLUMN]}, "
+                f"Origin: {updated_segment[self.db.RS_ORIGIN_ID_COLUMN]}, "
+                f"Destination: {updated_segment[self.db.RS_DESTINATION_ID_COLUMN]}, "
+                f"Duration: {updated_segment[self.db.RS_DURATION_COLUMN]}, "
+                f"Distance: {updated_segment[self.db.RS_DISTANCE_COLUMN]}")
             return updated_segment
         else:
             print("更新に失敗しました。")

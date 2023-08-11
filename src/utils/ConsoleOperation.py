@@ -36,7 +36,7 @@ class ConsoleOperation:
                 f"{message} (複数のIDを入力する場合はスペースで区切ってください): ").strip()
             if user_input:
                 if self._confirm_action(user_input):
-                    return [str.strip() for str in user_input.split()]
+                    return [string.strip() for string in user_input.split()]
                 else:
                     print("再度入力してください。")
             print("入力してください。")
@@ -66,7 +66,7 @@ class ConsoleOperation:
             action = self.receive_input(main_menu_options)
 
             if action == 1:
-                self.handle_bus_route_calculation(fo)
+                self.handle_bus_route_calculation()
             elif action == 2:
                 self.handle_pickup_point_management(fo)
             elif action == 3:
@@ -76,7 +76,7 @@ class ConsoleOperation:
             else:
                 self.print_unexpected_input_message()
 
-    def handle_bus_route_calculation(self, fo):
+    def handle_bus_route_calculation(self):
         self.print_unimplemented_message()
         pass
         """
@@ -110,7 +110,7 @@ class ConsoleOperation:
         if crud_action == 1:
             fo.print_all_route_segment()
         elif crud_action == 2:
-            self.handle_route_segment_update(fo)
+            self.handle_route_segment_update()
         elif crud_action == 3:
             self.exit()
 
@@ -172,7 +172,7 @@ class ConsoleOperation:
 
     """-------------ルートセグメント操作類-------------"""
 
-    def handle_route_segment_update(self, fo):
+    def handle_route_segment_update(self):
         self.print_unimplemented_message()
         pass
         """
