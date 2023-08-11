@@ -5,13 +5,12 @@ from src.db.DatabaseManager import DatabaseManager
 
 class ConsoleOperation:
     """-------------入力を受け取りメソッド類-------------"""
-
     def receive_input(self, options):
         while True:
             try:
                 index = int(input(">> "))
                 if 1 <= index <= len(options):
-                    if self.confirm_action(options[index - 1]):
+                    if self._confirm_action(options[index - 1]):
                         return index
                     else:
                         self.print_error_message("再度入力してください。")
@@ -24,7 +23,7 @@ class ConsoleOperation:
         while True:
             user_input = input(message).strip()
             if user_input:
-                if self.confirm_action(user_input):
+                if self._confirm_action(user_input):
                     return user_input
                 else:
                     print("再度入力してください。")
@@ -36,16 +35,24 @@ class ConsoleOperation:
             user_input = input(
                 f"{message} (複数のIDを入力する場合はスペースで区切ってください): ").strip()
             if user_input:
-                if self.confirm_action(user_input):
+                if self._confirm_action(user_input):
                     return [str.strip() for str in user_input.split()]
                 else:
                     print("再度入力してください。")
             print("入力してください。")
 
-    def confirm_action(self, action):
+    @staticmethod
+    def _confirm_action(action):
         while True:
             is_confirm = input(
                 f"選択されたのは、{action}です。 この操作でよろしいですか？ (yes/no): ").lower()
+            if is_confirm in ["yes", "no"]:
+                return is_confirm == "yes"
+
+    @staticmethod
+    def receive_confirm_input(message):
+        while True:
+            is_confirm = input(f"{message} (yes/no): ").lower()
             if is_confirm in ["yes", "no"]:
                 return is_confirm == "yes"
 
@@ -138,7 +145,11 @@ class ConsoleOperation:
                     self.print_no_data_message()
                 else:
                     print(
-                        f"ID {pickup_point_id} \n名前: {current_data[db.PP_NAME_COLUMN]}\n住所: {current_data[db.PP_ADDRESS_COLUMN]} \n原点ピックアップポイント:{current_data[db.PP_IS_ORIGIN_COLUMN]}\n待てる場所か:{current_data[db.PP_CAN_WAIT_COLUMN]}")
+                        f"ID {pickup_point_id} \n,"
+                        f"名前: {current_data[db.PP_NAME_COLUMN]}\n,"
+                        f"住所: {current_data[db.PP_ADDRESS_COLUMN]} \n,"
+                        f"原点ピックアップポイント:{current_data[db.PP_IS_ORIGIN_COLUMN]}\n,"
+                        f"待てる場所か:{current_data[db.PP_CAN_WAIT_COLUMN]}")
 
                     new_name = self.receive_single_str_input(
                         f"ID {pickup_point_id} の新しい名前を入力してください: ")
@@ -187,14 +198,16 @@ class ConsoleOperation:
 
     """-------------単純出力・操作類-------------"""
 
-    def print_menu(self, title, options):
+    @staticmethod
+    def print_menu(title, options):
         print("=" * 36)
         print(title)
         print("=" * 36)
         for i, option in enumerate(options, 1):
             print(f"{i}. {option}")
 
-    def exit(self):
+    @staticmethod
+    def exit():
         print("終了します。")
         sys.exit(0)
 
@@ -210,5 +223,6 @@ class ConsoleOperation:
     def print_unimplemented_message(self):
         self.print_error_message("この機能は未実装です。")
 
-    def print_error_message(self, message):
+    @staticmethod
+    def print_error_message(message):
         print(f"Error: {message}")

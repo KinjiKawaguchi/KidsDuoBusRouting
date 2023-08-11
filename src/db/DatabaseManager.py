@@ -58,6 +58,10 @@ class DatabaseManager:
     def get_all_data(self, table_name):
         self.cursor.execute(f"SELECT * FROM {table_name}")
         return self.cursor.fetchall()
+    
+    def is_table_empty(self, table_name):
+        self.cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
+        return self.cursor.fetchone()[0] == 0
 
     # ------------------------(PickupPoint Table Operations)--------------------------------
 
@@ -91,10 +95,36 @@ class DatabaseManager:
             print(f"Error: '{name}' or '{address}' already exists in the database.")
             return False
 
-    # ... Remaining methods related to PickupPoint ...
+    def get_pickup_point(self, id):
+        self.cursor.execute("SELECT * FROM pickup_point WHERE id = ?", (id,))
+        return self.cursor.fetchone()
+
+    def get_all_pickup_points(self):
+        self.cursor.execute("SELECT * FROM pickup_point")
+        return self.cursor.fetchall()
+
+    def update_pickup_point(self, id, new_name, new_address, new_can_wait):
+        self.cursor.execute(
+            "UPDATE pickup_point SET name = ?, address = ?, can_wait = ? WHERE id = ?", (new_name, new_address, new_can_wait, id))
+        self.conn.commit()
+        # Return the updated data
+        self.cursor.execute("SELECT * FROM pickup_point WHERE id = ?", (id,))
+        return self.cursor.fetchone()
+
+    def delete_pickup_point(self, id):
+        # Fetch the data before deletion
+        self.cursor.execute("SELECT * FROM pickup_point WHERE id = ?", (id,))
+        data = self.cursor.fetchone()
+        self.cursor.execute("DELETE FROM pickup_point WHERE id = ?", (id,))
+        self.conn.commit()
+        # Return the deleted data
+        return data
+
+    def count_pickup_points(self):
+        self.cursor.execute("SELECT COUNT(*) FROM pickup_point")
+        return self.cursor.fetchone()[0]
 
     # ------------------------(RouteSegment Table Operations)--------------------------------
-
     def is_route_segment_exists(self, origin_id, destination_id):
         self.cursor.execute(
             "SELECT * FROM route_segment WHERE origin_id = ? AND destination_id = ?", (origin_id, destination_id))
@@ -128,7 +158,7 @@ class DatabaseManager:
             print("Error calling get_route_segment method.")
             return None
 
-    def get_all_route_segments(self):
+    def get_all_route_segment(self):
         self.cursor.execute("SELECT * FROM route_segment")
         return self.cursor.fetchall()
 
@@ -141,7 +171,7 @@ class DatabaseManager:
             "SELECT * FROM route_segment WHERE id = ?", (route_segment_id,))
         return self.cursor.fetchone()
 
-    def delete_route_segment(self, route_segment_id=None, origin_id=None, destination_id=None):
+    def delete_route_segments(self, route_segment_id=None, origin_id=None, destination_id=None):
         if route_segment_id:
             self.cursor.execute("SELECT * FROM route_segment WHERE id = ?", (route_segment_id,))
             deleted_data = self.cursor.fetchone()
@@ -161,3 +191,4 @@ class DatabaseManager:
 
     def close(self):
         self.conn.close()
+        
