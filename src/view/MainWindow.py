@@ -1,3 +1,3 @@
 class MainWindow:
-    #WIP
+    # WIP
     pass

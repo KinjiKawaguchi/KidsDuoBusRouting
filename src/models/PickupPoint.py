@@ -2,7 +2,7 @@ class PickupPoint:
     _node_id = 0
 
     def __init__(self, db_id, name, address, is_origin, can_wait):
-        self.__id = PickupPoint._node_id
+        self.__id = self._node_id
         self.__db_id = db_id
         self.__name = name
         self.__address = address
