@@ -1,6 +1,6 @@
 import sqlite3
 
-class DatabaseManager:
+class PlaceDatabaseManager:
     # Constants for columns
     ORIGIN_ID = 1
     STUDENT_DATA_COLUMN_NUM = 3

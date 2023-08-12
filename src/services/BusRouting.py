@@ -1,10 +1,8 @@
 from src.models.Bus import Bus
-from src.models.Student import Student
 from src.models.PickupPoint import PickupPoint
 from src.models.RouteSegment import RouteSegment
 
-from src.db.DatabaseManager import DatabaseManager
-from src.utils.FileOperation import FileOperation
+from src.db.PlaceDatabaseManager import PlaceDatabaseManager
 
 
 class BusRouting:
@@ -13,7 +11,7 @@ class BusRouting:
         self.load_data()
 
     def load_data(self):
-        db = DatabaseManager("KidsDuoBusRouting.db")
+        db = PlaceDatabaseManager("KidsDuoBusRouting.db")
 
         # Instantiate pickup points
         self.pickup_points = self._instantiate_pickup_points(db)
