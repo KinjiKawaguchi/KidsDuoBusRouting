@@ -1,6 +1,7 @@
 ﻿import sys
+import bcrypt
 
-from src.db.DatabaseManager import DatabaseManager
+from src.db.PlaceDatabaseManager import PlaceDatabaseManager
 
 
 class ConsoleOperation:
@@ -50,15 +51,26 @@ class ConsoleOperation:
                 return is_confirm == "yes"
 
     @staticmethod
-    def receive_confirm_input(message):
+    def receive_yes_or_no_input(message):
         while True:
             is_confirm = input(f"{message} (yes/no): ").lower()
             if is_confirm in ["yes", "no"]:
                 return is_confirm == "yes"
 
     """-------------メニュー表示類-------------"""
+    def login_or_register(self, fo):
+        if not fo.has_user_records():
+            self._register_or_exit(fo)
 
-    def handle_main_manu(self, fo):
+        username = fo.get_current_username()
+        if username:
+            username = self._handle_logged_in_user(fo, username)
+            if not username:
+                self.login_or_register(fo)
+        else:
+            return self._handle_login_or_register_menu(fo)
+    
+    def handle_main_menu(self, fo):
         while True:
             main_menu_options = ["バスの経路を計算",
                                  "ピックアップポイントのデータ管理", "ルートセグメントのデータ管理", "終了"]
@@ -115,6 +127,91 @@ class ConsoleOperation:
         elif crud_action == 3:
             self.exit()
 
+    """-------------ユーザー操作類-------------"""
+    def _register_or_exit(self, fo):
+        options = ["新規ユーザー登録", "終了"]
+        self.print_menu("新規登録", options)
+        action = self.receive_input(options)
+        if action == 1:
+            self._register_user(fo)
+        else:
+            self.exit()
+
+    def _handle_logged_in_user(self, fo, username):
+        options = ["ログアウトする", "続ける", "終了する"]
+        self.print_menu(f"ログイン中: {username}", options)
+        choice = self.receive_input(options)
+        if choice == 1:
+            fo.logout()
+            return None
+        elif choice == 2:
+            return username
+        elif choice == 3:
+            self.exit()
+
+    def _handle_login_or_register_menu(self, fo):
+        while True:
+            options = ["ログイン", "ユーザ登録", "終了"]
+            self.print_menu("ログイン", options)
+            action = self.receive_input(options)
+            if action == 1:
+                return self._login(fo)
+            elif action == 2:
+                self._register_user(fo)
+            else:
+                self.exit()
+
+    def _register_user(self, fo):
+        while True:
+            username = self.receive_single_str_input("ユーザ名を入力してください: ")
+            password = self.receive_single_str_input("パスワードを入力してください: ")
+            hashed_password = self._hash_password(password)
+            api_key = self.receive_single_str_input("Google Maps APIキーを入力してください: ")
+            encrypted_key = fo.akm.encrypt_api_key(api_key)
+            keep_logged_in = self.receive_yes_or_no_input("ログイン状態を維持しますか？(y/n): ")
+
+            if fo.add_user(username, hashed_password, encrypted_key, keep_logged_in):
+                print("ユーザの登録に成功しました。")
+                break
+
+            self._handle_registration_failure(fo)
+
+    def _handle_registration_failure(self, fo):
+        print("ユーザの登録に失敗しました。")
+        input("Enterを押してください。")
+        options = ["再入力", "終了"]
+        self.print_menu("ユーザ登録", options)
+        action = self.receive_input(options)
+        if action == 2:
+            self.exit()
+
+    def _login(self, fo):
+        while True:
+            username = self.receive_single_str_input("ユーザ名を入力してください: ")
+            password = self.receive_single_str_input("パスワードを入力してください: ")
+
+            if fo.authenticate(username, password):
+                print("ログインに成功しました。")
+                return username
+
+            self._handle_login_failure(fo)
+
+    def _handle_login_failure(self, fo):
+        print("ログインに失敗しました。ユーザ名またはパスワードが間違っています。")
+        input("Enterを押してください。")
+        options = ["再入力", "新規ユーザー登録", "終了"]
+        self.print_menu("ログイン", options)
+        action = self.receive_input(options)
+        if action == 2:
+            self._register_user(fo)
+        elif action == 3:
+            self.exit()
+
+    @staticmethod
+    def _hash_password(password: str) -> bytes:
+        salt = bcrypt.gensalt()
+        return bcrypt.hashpw(password.encode(), salt)
+
     """-------------ピックアップポイント操作類-------------"""
 
     def handle_pickup_point_creation(self, fo):
@@ -136,7 +233,7 @@ class ConsoleOperation:
 
     def handle_pickup_point_update(self, fo):
         pickup_points = fo.print_all_pickup_point()
-        db = DatabaseManager('KidsDuoBusRouting.db')
+        db = PlaceDatabaseManager('KidsDuoBusRouting.db')
         if pickup_points is not None:
             pickup_point_id_list = self.receive_multiple_str_input(
                 "更新したいデータのIDを入力してください: ")
