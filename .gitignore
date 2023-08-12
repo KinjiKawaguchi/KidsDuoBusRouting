@@ -40,3 +40,11 @@ src/api/__pycache__/GoogleMapsClient.cpython-311.pyc
 src/api/__pycache__/GoogleMapsClient.cpython-310.pyc
 src/models/__pycache__/PickupPoint.cpython-311.pyc
 src/models/__pycache__/RouteSegment.cpython-311.pyc
+apikey.txt
+user.db
+config.json
+.idea/KidsDuoBusRouting.iml
+.idea/inspectionProfiles/Project_Default.xml
+src/api/__pycache__/APIKeyManager.cpython-310.pyc
+src/db/__pycache__/UserDatabaseManager.cpython-310.pyc
+src/models/__pycache__/User.cpython-310.pyc
