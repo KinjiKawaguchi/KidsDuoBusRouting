@@ -63,7 +63,7 @@ class Bus:
     def set_driver_name_list(self, driver_name_list):
         self.__driver_name_list = driver_name_list
     
-    def set_attendat_name_list(self, attendant_name_list):
+    def set_attendant_name_list(self, attendant_name_list):
         self.__attendant_name_list = attendant_name_list
         
     def set_student_list(self, student_list):

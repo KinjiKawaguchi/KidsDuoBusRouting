@@ -1,5 +1,6 @@
 import sqlite3
 
+
 class PlaceDatabaseManager:
     # Constants for columns
     ORIGIN_ID = 1

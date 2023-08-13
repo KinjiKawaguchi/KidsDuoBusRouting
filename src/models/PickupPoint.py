@@ -45,3 +45,9 @@ class PickupPoint:
         
     def set_can_wait(self, can_wait):
         self.__can_wait = can_wait
+
+    def __str__(self):
+        return (f"ピックアップポイント(番号: {self.__id}, データベースID: {self.__db_id}, "
+                f"名前: {self.__name}, 住所: {self.__address}, "
+                f"出発地点: {'TRUE' if self.__is_origin else 'FALSE'}, "
+                f"待機可能: {'TURE' if self.__can_wait else 'FALSE'})")

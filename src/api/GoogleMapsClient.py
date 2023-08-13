@@ -6,7 +6,7 @@ from urllib.parse import quote
 class GoogleMapsClient:
     def __init__(self, api_key):
         if not api_key:
-            raise ValueError("API key must be provided.")
+            raise ValueError("API keyが提供されていません。")
         self.API_KEY = api_key
 
     def calculate_duration(self, from_address, to_address):
@@ -46,7 +46,7 @@ class GoogleMapsClient:
             print(f"Request Error: {e}")
             return None, None
         except KeyError:
-            print("Error: Unable to retrieve duration and distance.")
+            print("Error: 計算に失敗しました。")
             return None, None
 
         return duration, distance

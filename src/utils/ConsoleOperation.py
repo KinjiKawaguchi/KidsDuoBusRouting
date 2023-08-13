@@ -2,9 +2,12 @@
 import bcrypt
 
 from src.db.PlaceDatabaseManager import PlaceDatabaseManager
+from src.services.BusRouting import BusRouting
 
 
 class ConsoleOperation:
+    def __init__(self):
+        self.br = None
     """-------------入力を受け取りメソッド類-------------"""
     def receive_input(self, options):
         while True:
@@ -58,6 +61,7 @@ class ConsoleOperation:
                 return is_confirm == "yes"
 
     """-------------メニュー表示類-------------"""
+
     def login_or_register(self, fo):
         if not fo.has_user_records():
             self._register_or_exit(fo)
@@ -69,7 +73,7 @@ class ConsoleOperation:
                 self.login_or_register(fo)
         else:
             return self._handle_login_or_register_menu(fo)
-    
+
     def handle_main_menu(self, fo):
         while True:
             main_menu_options = ["バスの経路を計算",
@@ -78,7 +82,7 @@ class ConsoleOperation:
             action = self.receive_input(main_menu_options)
 
             if action == 1:
-                self.handle_bus_route_calculation()
+                self.handle_bus_route_calculation(fo)
             elif action == 2:
                 self.handle_pickup_point_management(fo)
             elif action == 3:
@@ -89,15 +93,26 @@ class ConsoleOperation:
                 self.print_unexpected_input_message()
             input("Enterを押してください。")
 
-    def handle_bus_route_calculation(self):
-        self.print_unimplemented_message()
-        pass
-        """
-        file_path = fo.receive_file()
-        students = fo.instantiate_student(file_path)
-        br = BusRouting()
-        br.determining_bus_route(students, NUMBER_OF_BUSES)
-        """
+    def handle_bus_route_calculation(self, fo):
+        students = []
+        while True:
+            self.br = BusRouting()
+            options = ["ファイルから読み込む", "キーボードで入力する", "生徒情報を確定", "終了"]
+            self.print_menu("生徒情報の入力", options)
+            action = self.receive_input(options)
+            if action == 1:
+                read_students, br = fo.read_studnet_data(self.br)
+                students.append(read_students)
+            elif action == 2:
+                input_student , br = self._receive_student_data(self.br)
+                students.append(input_student)
+                number_of_buses = fo.receive_number_of_buses()  # TODO ここでバスの数を受け取る
+                self.br = BusRouting.determine_bus_route(students, number_of_buses)
+            elif action == 2:
+                self.print_unimplemented_message()
+                pass
+            elif action == 3:
+                self.exit()
 
     def handle_pickup_point_management(self, fo):
         options = ["登録", "表示", "更新", "削除", "終了"]
@@ -128,6 +143,7 @@ class ConsoleOperation:
             self.exit()
 
     """-------------ユーザー操作類-------------"""
+
     def _register_or_exit(self, fo):
         options = ["新規ユーザー登録", "終了"]
         self.print_menu("新規登録", options)
@@ -174,9 +190,9 @@ class ConsoleOperation:
                 print("ユーザの登録に成功しました。")
                 break
 
-            self._handle_registration_failure(fo)
+            self._handle_registration_failure()
 
-    def _handle_registration_failure(self, fo):
+    def _handle_registration_failure(self):
         print("ユーザの登録に失敗しました。")
         input("Enterを押してください。")
         options = ["再入力", "終了"]
@@ -213,23 +229,32 @@ class ConsoleOperation:
         return bcrypt.hashpw(password.encode(), salt)
 
     """-------------ピックアップポイント操作類-------------"""
-
     def handle_pickup_point_creation(self, fo):
         options = ["ファイルから入力", "キーボードで入力", "終了"]
         self.print_menu("ピックアップポイントの登録", options)
         input_way = self.receive_input(options)
+        registered_data = None
         if input_way == 1:
             file_path = fo.receive_file()
             registered_data = fo.register_pickup_point(file_path)
-            if registered_data is not None:
-                fo.print_registered_data(registered_data)
-            else:
-                self.fail_to_register_message()
         elif input_way == 2:
-            self.print_unimplemented_message()
-            pass
+            registered_data = fo.register_pickup_point()
         elif input_way == 3:
             self.exit()
+
+        if registered_data is not None:
+            fo.print_registered_data(registered_data)
+        else:
+            self.fail_to_register_message()
+
+    def get_data_from_keyboard(self):
+        pickup_point_name = self.receive_single_str_input("ピックアップポイントの名前: ")
+        pickup_point_address = self.receive_single_str_input("ピックアップポイントの住所 ")
+        pickup_point_can_wait = self.receive_yes_or_no_input("ピックアップポイントで待機できますか？(y/n): ")
+
+        return [pickup_point_name, pickup_point_address, False, pickup_point_can_wait]
+
+
 
     def handle_pickup_point_update(self, fo):
         pickup_points = fo.print_all_pickup_point()
@@ -295,7 +320,6 @@ class ConsoleOperation:
         """
 
     """-------------単純出力・操作類-------------"""
-
     @staticmethod
     def print_menu(title, options):
         print("=" * 36)
@@ -317,7 +341,7 @@ class ConsoleOperation:
 
     def fail_to_register_message(self):
         self.print_error_message("データの登録に失敗しました。")
-        
+
     def print_unimplemented_message(self):
         self.print_error_message("この機能は未実装です。")
 

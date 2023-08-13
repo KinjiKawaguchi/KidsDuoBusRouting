@@ -12,6 +12,7 @@ from src.db.UserDatabaseManager import UserDatabaseManager
 from src.models.Student import Student
 from src.models.User import User
 from src.utils.ConsoleOperation import ConsoleOperation
+from src.services.BusRouting import BusRouting
 
 
 class FileOperation:
@@ -44,9 +45,12 @@ class FileOperation:
         root.destroy()  # Tkのルートウィンドウを破棄
         return file_path
 
-    def read_csv(self, file_path, encoding_type):
+    def read_csv(self, file_path, encoding_type=None):
         if not self.is_file_right(file_path):
             return None
+
+        if not encoding_type:
+            encoding_type = self._determine_file_encoding(file_path)
 
         try:
             with open(file_path, "r", encoding=encoding_type, errors='replace') as file:
@@ -74,17 +78,6 @@ class FileOperation:
             print("Error: CSVファイルではありません")
             return False
         return True
-
-    def instantiate_student(self, file_path):
-        rows = self.read_csv(file_path, "utf-8")
-        students = []
-        for row in rows:
-            if len(row) != self.place_db.STUDENT_DATA_COLUMN_NUM:
-                print("Error: データが不正です。")
-                return None
-            name, address, dismissal_time = row
-            students.append(Student(name, address, dismissal_time))
-        return students
     
     @staticmethod
     def print_registered_data(rows):  # TODO:このメソッドを改修する
@@ -146,19 +139,26 @@ class FileOperation:
         )
 
     """-------------ピックアップポイント処理-------------"""
-    def register_pickup_point(self, file_path):
+    def register_pickup_point(self, file_path=None,):
         if self.place_db.is_table_empty("pickup_point"):
             self._handle_empty_pickup_point_table()
+
+        if file_path:
+            data_to_register_list = self._read_pickup_point_data(file_path)
+        else:
+            data_to_register_list = self.co.get_data_from_keyboard()
+        if not data_to_register_list:
+            return None
+        return self._process_and_register_pickup_points(data_to_register_list)
+
+    def _read_pickup_point_data(self, file_path):
         if not self.is_file_right(file_path):
             return None
-
-        encoding = self._determine_file_encoding(file_path)
-        rows = self.read_csv(file_path, encoding)
+        rows = self.read_csv(file_path)
         if rows is None:
             print("Error: データの登録に失敗しました。")
             return None
-
-        return self._process_and_register_pickup_points(rows)
+        return rows
 
     def get_pickup_point(self, id):
         return self.place_db.get_pickup_point(id)
@@ -351,7 +351,7 @@ class FileOperation:
 
             current_id, current_origin_id, current_destination_id, current_duration, current_distance = \
                 self._extract_segment_data(current_segment)
-            dummy_valiable, updated_origin_id, updated_destination_id, updated_duration, updated_distance = \
+            dummy_variable, updated_origin_id, updated_destination_id, updated_duration, updated_distance = \
                 self._extract_segment_data(updated_segment)
 
             # 結果を整形して出力
@@ -378,6 +378,47 @@ class FileOperation:
         duration = segment[self.place_db.RS_DURATION_COLUMN]
         distance = segment[self.place_db.RS_DISTANCE_COLUMN]
         return segment_id, origin_id, destination_id, duration, distance
+
+    """-------------生徒情報処理-------------"""
+    def read_student_data(self, br):
+        file_path = self.receive_file()
+        students, br = self._instantiate_student(file_path, br)
+        return students, br
+
+    def _instantiate_student(self, file_path, br):
+        rows = self.read_csv(file_path)
+        students = []
+        for row in rows:
+            if len(row) != self.place_db.STUDENT_DATA_COLUMN_NUM:
+                print("Error: データが不正です。")
+            name, pickup_point_name, dismissal_time = row
+            pickup_point, br = self._get_pickup_point_instance(pickup_point_name, br)
+            if dismissal_time == "NB":
+                dismissal_time = None
+                students.append(Student(name, pickup_point, dismissal_time, no_bus=True))
+            else:
+                students.append(Student(name, pickup_point, dismissal_time))
+        return students, br
+
+    def _get_pickup_point_instance(self, pickup_point_name, br):
+        pick_up_point_candidate_list = []
+        for pickup_point in br.pickup_points:
+            if pickup_point_name in pickup_point.get_name():
+                pick_up_point_candidate_list.append(pickup_point)
+        if len(pick_up_point_candidate_list) == 0:
+            print("登録されていないピックアップポイントが検出されました。\nピックアップポイントを登録してください。")
+            self.register_pickup_point()  # file_pathをNoneにすることでキーボードインプットとする
+            br = BusRouting()  # 新規追加されたピックアップポイントを反映させるためにBusRoutingインスタンスを再生成
+            return self._get_pickup_point_instance(pickup_point_name, br), br
+        elif len(pick_up_point_candidate_list) == 1:
+            return pick_up_point_candidate_list[0], br
+        elif len(pick_up_point_candidate_list) > 1:
+            print("複数のピックアップポイントが検出されました。")
+            print("以下の中から正しいピックアップポイントを選択してください。")
+            for i, pickup_point in enumerate(pick_up_point_candidate_list):
+                print(f"{i}. {pickup_point.__str__()}")
+            choice = self.co.receive_input(pick_up_point_candidate_list)
+            return pick_up_point_candidate_list[choice], br
 
     """-------------共通処理-------------"""
     @staticmethod

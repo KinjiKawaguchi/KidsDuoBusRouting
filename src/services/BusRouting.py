@@ -7,7 +7,7 @@ from src.db.PlaceDatabaseManager import PlaceDatabaseManager
 
 class BusRouting:
     def __init__(self):
-        self.db = DatabaseManager("KidsDuoBusRouting.db")
+        self.db = PlaceDatabaseManager("KidsDuoBusRouting.db")
         self.pickup_points = None
         self.route_segments = None
         self.students = None
@@ -15,8 +15,6 @@ class BusRouting:
         self.load_data()
 
     def load_data(self):
-        db = PlaceDatabaseManager("KidsDuoBusRouting.db")
-
         # Instantiate pickup points
         self.pickup_points = self._instantiate_pickup_points()
 
@@ -43,9 +41,9 @@ class BusRouting:
                 return pickup_point
         raise ValueError(f"Pickup point with ID {pickup_point_id} not found")
 
-    def determine_bus_route(self, students, bus_count):
+    def determine_bus_route(self, students, number_of_buses):
         self.students = students
-        for _ in range(bus_count):
+        for _ in range(number_of_buses):
             pass
             # self.buses.append(Bus())
 
@@ -77,4 +75,8 @@ class BusRouting:
 
     def calculate_bus_route(self, groups):
         # TODO: Implement the bus scheduling algorithm
+        pass
+
+    def handle_get_pickup_point(self):
+
         pass
