@@ -5,6 +5,8 @@ import chardet
 from tkinter import filedialog
 import bcrypt
 
+
+from src.models.PickupPoint import PickupPoint
 from src.api.APIKeyManager import APIKeyManager
 from src.api.GoogleMapsClient import GoogleMapsClient
 from src.db.PlaceDatabaseManager import PlaceDatabaseManager
@@ -16,6 +18,7 @@ from src.services.BusRouting import BusRouting
 
 
 class FileOperation:
+    STUDENT_DATA_COLUMN_NUM = 3
     env_var_name = "KIDS-DUO_BUS_ROUTING_CRYPTO_KEY"
 
     def __init__(self):
@@ -139,14 +142,13 @@ class FileOperation:
         )
 
     """-------------ピックアップポイント処理-------------"""
-    def register_pickup_point(self, file_path=None,):
+    def register_pickup_point(self, file_path=None):
         if self.place_db.is_table_empty("pickup_point"):
             self._handle_empty_pickup_point_table()
-
         if file_path:
             data_to_register_list = self._read_pickup_point_data(file_path)
         else:
-            data_to_register_list = self.co.get_data_from_keyboard()
+            data_to_register_list = [self.co.get_data_from_keyboard()]
         if not data_to_register_list:
             return None
         return self._process_and_register_pickup_points(data_to_register_list)
@@ -388,37 +390,69 @@ class FileOperation:
     def _instantiate_student(self, file_path, br):
         rows = self.read_csv(file_path)
         students = []
+        i = 1
         for row in rows:
-            if len(row) != self.place_db.STUDENT_DATA_COLUMN_NUM:
+            if len(row) != self.STUDENT_DATA_COLUMN_NUM:
                 print("Error: データが不正です。")
-            name, pickup_point_name, dismissal_time = row
+            pickup_point_name, student_name, dismissal_time = row
+            print("="*36)
+            print(f"{i}件目>名前: {student_name}, "
+                  f"ピックアップポイント: {pickup_point_name}, "
+                  f"下校時間: {dismissal_time}")
+            print("="*36)
+            i += 1
             pickup_point, br = self._get_pickup_point_instance(pickup_point_name, br)
             if dismissal_time == "NB":
                 dismissal_time = None
-                students.append(Student(name, pickup_point, dismissal_time, no_bus=True))
+                students.append(Student(student_name, pickup_point, dismissal_time, no_bus=True))
             else:
-                students.append(Student(name, pickup_point, dismissal_time))
+                students.append(Student(student_name, pickup_point, dismissal_time))
         return students, br
 
     def _get_pickup_point_instance(self, pickup_point_name, br):
+        # ピックアップポイントの候補リストを取得
         pick_up_point_candidate_list = []
         for pickup_point in br.pickup_points:
-            if pickup_point_name in pickup_point.get_name():
+            if pickup_point_name == pickup_point.get_name():
                 pick_up_point_candidate_list.append(pickup_point)
-        if len(pick_up_point_candidate_list) == 0:
-            print("登録されていないピックアップポイントが検出されました。\nピックアップポイントを登録してください。")
-            self.register_pickup_point()  # file_pathをNoneにすることでキーボードインプットとする
-            br = BusRouting()  # 新規追加されたピックアップポイントを反映させるためにBusRoutingインスタンスを再生成
-            return self._get_pickup_point_instance(pickup_point_name, br), br
+
+        # 候補がない場合、未解決のピックアップポイント処理を行う
+        if not pick_up_point_candidate_list:
+            return self.handle_unresolved_pickup_point(pickup_point_name, br)
+        # 候補が1つの場合、その候補を返す
         elif len(pick_up_point_candidate_list) == 1:
             return pick_up_point_candidate_list[0], br
-        elif len(pick_up_point_candidate_list) > 1:
-            print("複数のピックアップポイントが検出されました。")
-            print("以下の中から正しいピックアップポイントを選択してください。")
-            for i, pickup_point in enumerate(pick_up_point_candidate_list):
-                print(f"{i}. {pickup_point.__str__()}")
-            choice = self.co.receive_input(pick_up_point_candidate_list)
-            return pick_up_point_candidate_list[choice], br
+        # 候補が複数の場合、ユーザーに選択させる
+        else:
+            return self._handle_multiple_pickup_points(pick_up_point_candidate_list, br)
+
+    def handle_unresolved_pickup_point(self, pickup_point_name, br):
+        # 未解決ピックアップポイント処理
+        options = list(br.pickup_points)  # br.pickup_pointsのコピーを作成
+        options.append("新規登録")
+        self.co.print_menu("未解決ピックアップポイント処理", options)
+        choice = self.co.receive_input(options)
+
+        # 新規登録を選択した場合
+        if choice == len(options):
+            self.register_pickup_point()  # キーボードからの登録を呼び出し
+            registered_data = self.place_db.get_latest_record(self.place_db.PP_TABLE_NAME)
+            br.pickup_points.append(PickupPoint(registered_data[self.place_db.PP_ID_COLUMN],
+                                                registered_data[self.place_db.PP_NAME_COLUMN],
+                                                registered_data[self.place_db.PP_ADDRESS_COLUMN],
+                                                registered_data[self.place_db.PP_IS_ORIGIN_COLUMN],
+                                                registered_data[self.place_db.PP_CAN_WAIT_COLUMN]))
+            return self._get_pickup_point_instance(pickup_point_name, br)
+        return br.pickup_points[choice - 1], br
+
+    def _handle_multiple_pickup_points(self, pick_up_point_candidate_list, br):
+        # 複数のピックアップポイントが検出された場合
+        print("複数のピックアップポイントが検出されました。")
+        print("以下の中から正しいピックアップポイントを選択してください。")
+        for i, pickup_point in enumerate(pick_up_point_candidate_list):
+            print(f"{i}. {pickup_point.__str__()}")
+        choice = self.co.receive_input(pick_up_point_candidate_list)
+        return pick_up_point_candidate_list[choice], br
 
     """-------------共通処理-------------"""
     @staticmethod

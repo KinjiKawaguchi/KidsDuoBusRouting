@@ -38,3 +38,15 @@ class Student:
 
     def set_no_bus(self, no_bus):
         self.__no_bus = no_bus
+
+    def __str__(self):
+        if self.__no_bus:
+            return (f"生徒(番号: {self.__id}, 名前: {self.__name}, "
+                    f"ピックアップポイントの名前: {self.__pickup_point.get_name()}, "
+                    f"ピックアップポイントの住所: {self.__pickup_point.get_address()}, "
+                    f"下校時間: NB ")
+        else:
+            return (f"生徒(番号: {self.__id}, 名前: {self.__name}, "
+                    f"ピックアップポイント: {self.__pickup_point.get_name()}, "
+                    f"ピックアップポイントの住所: {self.__pickup_point.get_address()},"
+                    f"下校時間: {self.__dismissal_time}, ")

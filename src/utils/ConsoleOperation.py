@@ -1,7 +1,9 @@
-﻿import sys
+﻿import re
+import sys
 import bcrypt
 
 from src.db.PlaceDatabaseManager import PlaceDatabaseManager
+from src.models.Student import Student
 from src.services.BusRouting import BusRouting
 
 
@@ -60,20 +62,7 @@ class ConsoleOperation:
             if is_confirm in ["yes", "no"]:
                 return is_confirm == "yes"
 
-    """-------------メニュー表示類-------------"""
-
-    def login_or_register(self, fo):
-        if not fo.has_user_records():
-            self._register_or_exit(fo)
-
-        username = fo.get_current_username()
-        if username:
-            username = self._handle_logged_in_user(fo, username)
-            if not username:
-                self.login_or_register(fo)
-        else:
-            return self._handle_login_or_register_menu(fo)
-
+    """-------------メインメニュー-------------"""
     def handle_main_menu(self, fo):
         while True:
             main_menu_options = ["バスの経路を計算",
@@ -93,27 +82,7 @@ class ConsoleOperation:
                 self.print_unexpected_input_message()
             input("Enterを押してください。")
 
-    def handle_bus_route_calculation(self, fo):
-        students = []
-        while True:
-            self.br = BusRouting()
-            options = ["ファイルから読み込む", "キーボードで入力する", "生徒情報を確定", "終了"]
-            self.print_menu("生徒情報の入力", options)
-            action = self.receive_input(options)
-            if action == 1:
-                read_students, br = fo.read_studnet_data(self.br)
-                students.append(read_students)
-            elif action == 2:
-                input_student , br = self._receive_student_data(self.br)
-                students.append(input_student)
-                number_of_buses = fo.receive_number_of_buses()  # TODO ここでバスの数を受け取る
-                self.br = BusRouting.determine_bus_route(students, number_of_buses)
-            elif action == 2:
-                self.print_unimplemented_message()
-                pass
-            elif action == 3:
-                self.exit()
-
+    """-------------ピックアップポイント操作類-------------"""
     def handle_pickup_point_management(self, fo):
         options = ["登録", "表示", "更新", "削除", "終了"]
         self.print_menu("ピックアップポイントのデータ管理", options)
@@ -131,6 +100,69 @@ class ConsoleOperation:
         else:
             self.print_unexpected_input_message()
 
+    def handle_pickup_point_creation(self, fo):
+        options = ["ファイルから入力", "キーボードで入力", "終了"]
+        self.print_menu("ピックアップポイントの登録", options)
+        input_way = self.receive_input(options)
+        registered_data = None
+        if input_way == 1:
+            file_path = fo.receive_file()
+            registered_data = fo.register_pickup_point(file_path)
+        elif input_way == 2:
+            registered_data = fo.register_pickup_point()
+        elif input_way == 3:
+            self.exit()
+
+        if registered_data is not None:
+            fo.print_registered_data(registered_data)
+        else:
+            self.fail_to_register_message()
+
+    def get_data_from_keyboard(self):
+        pickup_point_name = self.receive_single_str_input("ピックアップポイントの名前: ")
+        pickup_point_address = self.receive_single_str_input("ピックアップポイントの住所: ")
+        pickup_point_can_wait = self.receive_yes_or_no_input("ピックアップポイントで待機できますか？(y/n): ")
+
+        return [pickup_point_name, pickup_point_address, False, pickup_point_can_wait]
+
+    def handle_pickup_point_update(self, fo):
+        pickup_points = fo.print_all_pickup_point()
+        db = PlaceDatabaseManager('KidsDuoBusRouting.db')
+        if pickup_points is not None:
+            pickup_point_id_list = self.receive_multiple_str_input(
+                "更新したいデータのIDを入力してください: ")
+            for pickup_point_id in pickup_point_id_list:
+                current_data = fo.get_pickup_point(pickup_point_id)
+                if current_data is None:
+                    self.print_no_data_message()
+                else:
+                    print(
+                        f"ID {pickup_point_id} \n,"
+                        f"名前: {current_data[db.PP_NAME_COLUMN]}\n,"
+                        f"住所: {current_data[db.PP_ADDRESS_COLUMN]} \n,"
+                        f"原点ピックアップポイント:{current_data[db.PP_IS_ORIGIN_COLUMN]}\n,"
+                        f"待てる場所か:{current_data[db.PP_CAN_WAIT_COLUMN]}")
+
+                    new_name = self.receive_single_str_input(
+                        f"ID {pickup_point_id} の新しい名前を入力してください: ")
+                    new_address = self.receive_single_str_input(
+                        f"ID {pickup_point_id} の新しい住所を入力してください:")
+                    new_can_wait = self.receive_single_str_input(
+                        f"ID {pickup_point_id} の待てる場所かを入力してください: ")
+
+                    fo.update_pickup_point(
+                        pickup_point_id, new_name, new_address, new_can_wait)
+                    print(f"ID {pickup_point_id} のデータを更新しました。")
+
+    def handle_pickup_point_deletion(self, fo):
+        pickup_points = fo.print_all_pickup_point()
+        if pickup_points is not None:
+            pickup_point_id_list = self.receive_multiple_str_input(
+                "削除したいデータのIDを入力してください:  ")
+            for pickup_point_id in pickup_point_id_list:
+                fo.delete_pickup_point(pickup_point_id)
+
+    """-------------ルートセグメント操作類-------------"""
     def handle_route_segment_management(self, fo):
         options = ["表示", "更新", "終了"]
         self.print_menu("ルートセグメントのデータ管理", options)
@@ -142,7 +174,93 @@ class ConsoleOperation:
         elif crud_action == 3:
             self.exit()
 
+    def handle_route_segment_update(self):
+        self.print_unimplemented_message()
+        pass
+        """
+        route_segments = fo.print_all_route_segment()
+        if route_segments is not None:
+            pickup_point_id_list = self.receive_multiple_str_input("更新するデータのIDを入力してください。(複数可):")
+            for pickup_point_id in pickup_point_id_list:
+                segment_data = fo.get_route_segment(pickup_point_id=pickup_point_id)
+                origin_name = fo.get_pickup_point(segment_data[5])[1]
+                destination_name = fo.get_pickup_point(segment_data[6])[1]
+                current_duration = segment_data[3]
+                current_distance = segment_data[4]
+
+                print(f"ID {pickup_point_id} の出発地点は {origin_name}で、到着地点は{destination_name} です。")
+                print(f"現在登録されている所要時間は {current_duration}分で、現在登録されている距離は{current_distance} km です。")
+
+                new_duration = self.receive_single_str_input(f"ID {pickup_point_id}に対して新しく登録する所要時間を入力: ")
+                new_distance = self.receive_single_str_input(f"ID {pickup_point_id}に対して新しく登録する距離を入力: ")
+
+                fo.update_route_segment(pickup_point_id, new_duration, new_distance)
+                print(f"ID {pickup_point_id} のデータを更新しました。")
+        """
+
+    """-------------ルート計算-------------"""
+    def handle_bus_route_calculation(self, fo):
+        self.br = BusRouting() #pickup_points, route_segmentsなどをインタンス化
+        route = self.br.route_calculation(self._handle_receive_student_data(self, fo),
+                                          self._handle_receive_bus_data(self, fo))  # バスルートの計算
+        #self._print_bus_route(route)  # バスルートの表示
+        pass
+    
+    def _handle_receive_student_data(self, fo):
+        students = []
+        while True:
+            options = ["ファイルから読み込む", "キーボードで入力する", "生徒情報を確定", "終了"]
+            self.print_menu("生徒情報の入力", options)
+            action = self.receive_input(options)
+            if action == 1:
+                read_student, br = fo.read_student_data(self.br)
+                students.extend(read_student)
+            elif action == 2:
+                students.append(self._receive_student_data_from_keyboard(fo))
+            elif action == 3:
+                self.print_unimplemented_message()
+                pass
+            elif action == 4:
+                self.exit()
+            self._print_loaded_students(students)
+
+    def _receive_student_data_from_keyboard(self, fo):
+        student_name = self.receive_single_str_input("生徒の名前を入力してください: ")
+        pickup_point, dummy_valiable = fo.handle_unresolved_pickup_point(None, self.br)
+        student_no_bus = self.receive_yes_or_no_input("ノーバス？(y/n): ")
+        if not student_no_bus:
+            while True:
+                student_dismissal_time = self.receive_single_str_input("生徒の下校時間を入力してください(HH:MM) ")
+                if re.match("^([01]?[0-9]|2[0-3]):[0-5][0-9]$", student_dismissal_time):
+                    break
+                else:
+                    print("正しい形式で入力してください。")
+            return Student(student_name, pickup_point, student_dismissal_time, False)
+        return Student(student_name, pickup_point, None, True)
+
+    @staticmethod
+    def _print_loaded_students(students):
+        print("現在登録されている生徒の情報は以下の通りです。")
+        i = 1
+        for student in students:
+            print(f"{i}人目:{student.__str__()}")
+            i += 1
+            
+    def _handle_receive_bus_data(self, fo):
+        pass
+
     """-------------ユーザー操作類-------------"""
+    def login_or_register(self, fo):
+        if not fo.has_user_records():
+            self._register_or_exit(fo)
+
+        username = fo.get_current_username()
+        if username:
+            username = self._handle_logged_in_user(fo, username)
+            if not username:
+                self.login_or_register(fo)
+        else:
+            return self._handle_login_or_register_menu(fo)
 
     def _register_or_exit(self, fo):
         options = ["新規ユーザー登録", "終了"]
@@ -227,97 +345,6 @@ class ConsoleOperation:
     def _hash_password(password: str) -> bytes:
         salt = bcrypt.gensalt()
         return bcrypt.hashpw(password.encode(), salt)
-
-    """-------------ピックアップポイント操作類-------------"""
-    def handle_pickup_point_creation(self, fo):
-        options = ["ファイルから入力", "キーボードで入力", "終了"]
-        self.print_menu("ピックアップポイントの登録", options)
-        input_way = self.receive_input(options)
-        registered_data = None
-        if input_way == 1:
-            file_path = fo.receive_file()
-            registered_data = fo.register_pickup_point(file_path)
-        elif input_way == 2:
-            registered_data = fo.register_pickup_point()
-        elif input_way == 3:
-            self.exit()
-
-        if registered_data is not None:
-            fo.print_registered_data(registered_data)
-        else:
-            self.fail_to_register_message()
-
-    def get_data_from_keyboard(self):
-        pickup_point_name = self.receive_single_str_input("ピックアップポイントの名前: ")
-        pickup_point_address = self.receive_single_str_input("ピックアップポイントの住所 ")
-        pickup_point_can_wait = self.receive_yes_or_no_input("ピックアップポイントで待機できますか？(y/n): ")
-
-        return [pickup_point_name, pickup_point_address, False, pickup_point_can_wait]
-
-
-
-    def handle_pickup_point_update(self, fo):
-        pickup_points = fo.print_all_pickup_point()
-        db = PlaceDatabaseManager('KidsDuoBusRouting.db')
-        if pickup_points is not None:
-            pickup_point_id_list = self.receive_multiple_str_input(
-                "更新したいデータのIDを入力してください: ")
-            for pickup_point_id in pickup_point_id_list:
-                current_data = fo.get_pickup_point(pickup_point_id)
-                if current_data is None:
-                    self.print_no_data_message()
-                else:
-                    print(
-                        f"ID {pickup_point_id} \n,"
-                        f"名前: {current_data[db.PP_NAME_COLUMN]}\n,"
-                        f"住所: {current_data[db.PP_ADDRESS_COLUMN]} \n,"
-                        f"原点ピックアップポイント:{current_data[db.PP_IS_ORIGIN_COLUMN]}\n,"
-                        f"待てる場所か:{current_data[db.PP_CAN_WAIT_COLUMN]}")
-
-                    new_name = self.receive_single_str_input(
-                        f"ID {pickup_point_id} の新しい名前を入力してください: ")
-                    new_address = self.receive_single_str_input(
-                        f"ID {pickup_point_id} の新しい住所を入力してください:")
-                    new_can_wait = self.receive_single_str_input(
-                        f"ID {pickup_point_id} の待てる場所かを入力してください: ")
-
-                    fo.update_pickup_point(
-                        pickup_point_id, new_name, new_address, new_can_wait)
-                    print(f"ID {pickup_point_id} のデータを更新しました。")
-
-    def handle_pickup_point_deletion(self, fo):
-        pickup_points = fo.print_all_pickup_point()
-        if pickup_points is not None:
-            pickup_point_id_list = self.receive_multiple_str_input(
-                "削除したいデータのIDを入力してください:  ")
-            for pickup_point_id in pickup_point_id_list:
-                fo.delete_pickup_point(pickup_point_id)
-
-    """-------------ルートセグメント操作類-------------"""
-
-    def handle_route_segment_update(self):
-        self.print_unimplemented_message()
-        pass
-        """
-        route_segments = fo.print_all_route_segment()
-        if route_segments is not None:
-            pickup_point_id_list = self.receive_multiple_str_input("更新するデータのIDを入力してください。(複数可):")
-            for pickup_point_id in pickup_point_id_list:
-                segment_data = fo.get_route_segment(pickup_point_id=pickup_point_id)
-                origin_name = fo.get_pickup_point(segment_data[5])[1]
-                destination_name = fo.get_pickup_point(segment_data[6])[1]
-                current_duration = segment_data[3]
-                current_distance = segment_data[4]
-
-                print(f"ID {pickup_point_id} の出発地点は {origin_name}で、到着地点は{destination_name} です。")
-                print(f"現在登録されている所要時間は {current_duration}分で、現在登録されている距離は{current_distance} km です。")
-
-                new_duration = self.receive_single_str_input(f"ID {pickup_point_id}に対して新しく登録する所要時間を入力: ")
-                new_distance = self.receive_single_str_input(f"ID {pickup_point_id}に対して新しく登録する距離を入力: ")
-
-                fo.update_route_segment(pickup_point_id, new_duration, new_distance)
-                print(f"ID {pickup_point_id} のデータを更新しました。")
-        """
 
     """-------------単純出力・操作類-------------"""
     @staticmethod

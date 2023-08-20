@@ -10,9 +10,17 @@ class BusRouting:
         self.db = PlaceDatabaseManager("KidsDuoBusRouting.db")
         self.pickup_points = None
         self.route_segments = None
-        self.students = None
-        self.buses = []
+        self.students
+        self.buses
         self.load_data()
+        
+    def route_calculation(self, students, buses):
+        self._instaniate_arguments(students, buses)
+        pass
+    
+    def _instaniate_arguments(self, students, buses):
+        self.students = students
+        self.buses = buses
 
     def load_data(self):
         # Instantiate pickup points
@@ -37,7 +45,7 @@ class BusRouting:
     @staticmethod
     def _find_pickup_point_by_id(pickup_points, pickup_point_id):
         for pickup_point in pickup_points:
-            if pickup_point.get_id() == pickup_point_id:
+            if pickup_point.get_db_id() == pickup_point_id:
                 return pickup_point
         raise ValueError(f"Pickup point with ID {pickup_point_id} not found")
 
@@ -78,5 +86,9 @@ class BusRouting:
         pass
 
     def handle_get_pickup_point(self):
-
         pass
+    
+    def print_all_pickup_point(self):
+        for pickup_point in self.pickup_points:
+            print(pickup_point.__str__())
+        return self.pickup_points

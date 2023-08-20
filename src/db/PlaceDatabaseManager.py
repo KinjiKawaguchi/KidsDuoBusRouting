@@ -63,6 +63,10 @@ class PlaceDatabaseManager:
     def is_table_empty(self, table_name):
         self.cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
         return self.cursor.fetchone()[0] == 0
+    
+    def get_latest_record(self, table_name):
+        self.cursor.execute(f"SELECT * FROM {table_name} ORDER BY id DESC LIMIT 1")
+        return self.cursor.fetchone()
 
     # ------------------------(PickupPoint Table Operations)--------------------------------
 
